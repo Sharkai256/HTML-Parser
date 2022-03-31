@@ -1,1 +1,8 @@
-const a: string = '1';
+const parser = (html: string) => {
+
+    return {
+        // Your DOM here
+    }
+}
+
+export = parser
