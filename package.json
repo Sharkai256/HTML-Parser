@@ -1,0 +1,19 @@
+{
+  "name": "html-parser",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sharkai256/HTML-Parser.git"
+  },
+  "author": "sharkai",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sharkai256/HTML-Parser/issues"
+  },
+  "homepage": "https://github.com/Sharkai256/HTML-Parser#readme"
+}
