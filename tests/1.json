@@ -1,0 +1,45 @@
+{
+    "tagName": "HTML",
+    "innerText": "Some text here",
+    "innerHTML": "\n<head>\n    <title>Document</title>\n</head>\n<body>\n    <div id=\"kk\">Some text here</div>\n</body>\n",
+    "outerHTML": "<html>\n<head>\n    <title>Document</title>\n</head>\n<body>\n    <div id=\"kk\">Some text here</div>\n</body>\n</html>",
+    "attributes": {},
+    "children": [
+        {
+            "tagName": "HEAD",
+            "innerText": "",
+            "innerHTML": "\n    <title>Document</title>\n",
+            "outerHTML": "<head>\n    <title>Document</title>\n</head>",
+            "attributes": {},
+            "children": [
+                {
+                    "tagName": "TITLE",
+                    "innerText": "Document",
+                    "innerHTML": "Document",
+                    "outerHTML": "<title>Document</title>",
+                    "attributes": {},
+                    "children": []
+                }
+            ]
+        },
+        {
+            "tagName": "BODY",
+            "innerText": "Some text here",
+            "innerHTML": "\n    <div id=\"kk\">Some text here</div>\n",
+            "outerHTML": "<body>\n    <div id=\"kk\">Some text here</div>\n</body>",
+            "attributes": {},
+            "children": [
+                {
+                    "tagName": "DIV",
+                    "innerText": "Some text here",
+                    "innerHTML": "Some text here",
+                    "outerHTML": "<div id=\"kk\">Some text here</div>",
+                    "attributes": {
+                        "id": "kk"
+                    },
+                    "children": []
+                }
+            ]
+        }
+    ]
+}
