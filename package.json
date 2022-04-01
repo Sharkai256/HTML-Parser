@@ -1,22 +1,31 @@
 {
   "name": "html-parser",
   "version": "0.0.1",
-  "description": "",
+  "description": "Parses HTML string to simplified DOM",
   "main": "index.js",
   "scripts": {
     "test": "ts-node test.ts"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Sharkai256/HTML-Parser.git"
-  },
+  "repository": "Sharkai256/HTML-Parser",
   "author": "sharkai",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Sharkai256/HTML-Parser/issues"
-  },
-  "homepage": "https://github.com/Sharkai256/HTML-Parser#readme",
+  "contributors": [
+    "Robert Liapota <urobbyu@gmail.com>"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^17.0.23"
-  }
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "index.js",
+    "index.d.ts",
+    "tests",
+    "test.ts"
+  ],
+  "keywords": [
+    "html",
+    "parser",
+    "dom"
+  ]
 }
