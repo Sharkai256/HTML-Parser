@@ -1,5 +1,5 @@
-import fs = require('fs')
-import parser = require('./index')
+import fs from 'fs'
+import parser from './index'
 
 type Iterable = {[key: string | number]: any}
 

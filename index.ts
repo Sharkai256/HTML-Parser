@@ -5,4 +5,4 @@ const parser = (html: string) => {
     }
 }
 
-export = parser
+export default parser
