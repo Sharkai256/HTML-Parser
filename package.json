@@ -3,10 +3,13 @@
   "version": "0.0.1",
   "description": "Parses and serializes (HTML ⇄ DOM)",
   "main": "index.js",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "test": "ts-node test.ts"
   },
-  "repository": "Sharkai256/HTML-Parser",
+  "repository": "git://github.com/Sharkai256/HTML-Parser.git",
   "author": "sharkai",
   "contributors": [
     "Robert Liapota <urobbyu@gmail.com>"
