@@ -1,6 +1,6 @@
-# HTML Parser
+# HTML PS (HTML ⇄ DOM)
 
-This module takes HTML string as input and produces simplified DOM.
+This module takes HTML string as input and produces simplified DOM which then, after being changed can be serialized back.
 
 ## Installation
 
@@ -17,8 +17,9 @@ const fs = require('fs')
 const parser = require('html-parser')
 
 const html = fs.readFileSync('index.html').toString()
-
 const dom = parser(html)
 
-console.log(html.title)
+dom.title = 'New Title'
+
+console.log(dom.serialize())
 ```

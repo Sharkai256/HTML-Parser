@@ -1,7 +1,7 @@
 {
-  "name": "html-parser",
+  "name": "html-ps",
   "version": "0.0.1",
-  "description": "Parses HTML string to simplified DOM",
+  "description": "Parses and serializes (HTML ⇄ DOM)",
   "main": "index.js",
   "scripts": {
     "test": "ts-node test.ts"
