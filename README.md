@@ -7,7 +7,7 @@ This module takes HTML string as input and produces simplified DOM which then, a
 You can install it with [npm](https://www.npmjs.com/):
 
 ```
-npm i http-php
+npm i html-ps
 ```
 
 ## Example
