@@ -12,7 +12,8 @@
   "repository": "git://github.com/Sharkai256/HTML-Parser.git",
   "author": "sharkai",
   "contributors": [
-    "Robert Liapota <urobbyu@gmail.com>"
+    "Robert Liapota <urobbyu@gmail.com>",
+    "albanianslavetrader"
   ],
   "license": "MIT",
   "devDependencies": {
