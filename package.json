@@ -23,9 +23,7 @@
     "README.md",
     "LICENSE",
     "index.js",
-    "index.d.ts",
-    "tests",
-    "test.ts"
+    "index.d.ts"
   ],
   "keywords": [
     "html",

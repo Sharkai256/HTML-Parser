@@ -1,0 +1,25 @@
+{
+    "children": [
+        {
+            "tagName": "HEAD",
+            "children": [
+                {
+                    "tagName": "META",
+                    "innerHTML": ""
+                },
+                {
+                    "tagName": "META",
+                    "innerHTML": ""
+                },
+                {
+                    "tagName": "META",
+                    "innerHTML": ""
+                },
+                {
+                    "tagName": "TITLE",
+                    "innerHTML": "Base struct + Double byte 🚀"
+                }
+            ]
+        }
+    ]
+}

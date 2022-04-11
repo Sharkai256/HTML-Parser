@@ -32,19 +32,34 @@ const test = (name: number) => {
     let fullTime = Date.now()
 
     const html = fs.readFileSync(`tests/${name}.html`).toString().replace(/\r\n/g, '\n')
-    const json = JSON.parse(fs.readFileSync(`tests/${name}.json`).toString())
 
+    let state = '\x1b[31mErr: Test not found'
+    let parsed = {}
     let parseTime = Date.now()
-    const parsed = parser(html)
+    try {
+        parsed = parser(html)
+    } catch (err) {
+        state = '\x1b[31mErr: Parser returned error\n' + err
+    }
     parseTime = Date.now() - parseTime
     fullTime = Date.now() - fullTime
 
-    let state: string
-    try {
-        iterateObject(json, parsed, 'html')
-        state = '\x1b[32mPassed'
-    } catch (err) {
-        state = `\x1b[31mErr: ${(<Error>err).message}`
+    if (fs.existsSync(`tests/${name}.json`) && state == '\x1b[31mErr: Test not found') {
+        const json = JSON.parse(fs.readFileSync(`tests/${name}.json`).toString())
+        try {
+            iterateObject(json, parsed, 'html')
+            state = '\x1b[32mPassed'
+        } catch (err) {
+            state = `\x1b[31mErr: ${(<Error>err).message}`
+        }
+    }
+    if (fs.existsSync(`tests/${name}.js`) && (state == '\x1b[31mErr: Test not found' || state == '\x1b[32mPassed')) {
+        try {
+            const tester = require('./tests/2')
+            state = tester(parsed)
+        } catch (err) {
+            state = '\x1b[31mErr: Test execution failed\n' + err
+        }
     }
 
     return `Test #${name}
@@ -53,6 +68,6 @@ const test = (name: number) => {
           \rParse time passed - \x1b[1m${parseTime <= 5 ? '\x1b[32m' : '\x1b[31m'}${parseTime}\x1b[0m`
 }
 
-const testArr = new Array(1).fill(null).map((v, i) => test(i + 1))
+const testArr = new Array(2).fill(null).map((v, i) => test(i + 1))
 
 console.log(testArr.join('\n\n'))
