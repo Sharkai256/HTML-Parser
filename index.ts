@@ -1,9 +1,8 @@
-//import serialize from './ser'
+import serialize from './ser'
 
 type Element = {
     tagName: string
     children: Element[]
-    innerText: string
 }
 
 export interface SimpleDOM extends Element {
@@ -25,5 +24,5 @@ const parser = (html: string): SimpleDOM => {
 //when this would be working i will run tests
 const res = parser(string);
 console.log(res);
-//parser.serialize = serialize
-//export default parser
+parser.serialize = serialize
+export default parser
