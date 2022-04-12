@@ -3,6 +3,7 @@ import serialize from './ser'
 type Element = {
     tagName: string
     children: Element[]
+    innerText: string
 }
 
 export interface SimpleDOM extends Element {
@@ -14,8 +15,9 @@ const parser = (html: string): SimpleDOM => {
     // Your code here
     return {
         title: '',
-        tagName: 'k',
-        children: []
+        tagName: 'HTML',
+        children: [],
+        innerText: ''
         // Your DOM here
     }
 }
