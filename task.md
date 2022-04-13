@@ -7,7 +7,7 @@
 
 ```TS
 class Node {
-    nodeName: string // Имя тега, '#text' для текстовых нод, '#comment' для комментариев и '#doctype' для !DOCTYPE.
+    nodeName: string // Имя тега, '#text' для текстовых нод, '#root' для рута документа, '#comment' для комментариев и '#doctype' для !DOCTYPE.
     nodeValue: string | null // Содержимое текстовой ноды, либо null.
     textContent: string // Содержимое дочерних нод в виде текста.
     childNodes: Node[] // Массив прямых дочерних нод.
@@ -23,6 +23,7 @@ class Element extends Node {
     children: Element[] // Массив прямых дочерних элементов.
     innerText: string // Алиас на textContent.
     innerHTML: string // Всё что находится внутри тега. При считывании сериализует все дочерние элементы. При присвоении парсит ввод.
+    attributes: { [name: string]: string } // Аттрибуты элемента.
     
     toString: () => string // Сериализует элемент.
     querySelectorAll: (selector: string) => Element[] // Находит среди всех дочерних элементов те, которые подходят по селектору.
