@@ -1,38 +1,53 @@
 {
-    "tagName": "HTML",
-    "attributes": {},
+    "nodeName": "#root",
+    "nodeValue": null,
+    "childNodes": [
+        {
+            "nodeName": "#doctype",
+            "nodeValue": "html"
+        }
+    ],
     "children": [
         {
-            "tagName": "HEAD",
+            "nodeValue": null,
+            "tagName": "HTML",
             "attributes": {},
             "children": [
                 {
-                    "tagName": "TITLE",
-                    "childNodes": [
-                        {
-                            "nodeValue": "Document"
-                        }
-                    ],
+                    "tagName": "HEAD",
                     "attributes": {},
-                    "children": []
-                }
-            ]
-        },
-        {
-            "tagName": "BODY",
-            "attributes": {},
-            "children": [
-                {
-                    "tagName": "DIV",
-                    "childNodes": [
+                    "children": [
                         {
-                            "nodeValue": "Some text here"
+                            "nodeName": "TITLE",
+                            "tagName": "TITLE",
+                            "childNodes": [
+                                {
+                                    "nodeName": "#text",
+                                    "nodeValue": "Document"
+                                }
+                            ],
+                            "attributes": {},
+                            "children": []
                         }
-                    ],
-                    "attributes": {
-                        "id": "kk"
-                    },
-                    "children": []
+                    ]
+                },
+                {
+                    "tagName": "BODY",
+                    "attributes": {},
+                    "children": [
+                        {
+                            "tagName": "DIV",
+                            "childNodes": [
+                                {
+                                    "nodeValue": "Some text here"
+                                }
+                            ],
+                            "attributes": {
+                                "id": "kk"
+                            },
+                            "children": []
+                        }
+                    ]
                 }
             ]
         }
