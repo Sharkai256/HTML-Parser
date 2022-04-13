@@ -1,6 +1,6 @@
 import serialize from './ser'
 
-type Element = {
+export type Element = {
     tagName: string
     children: Element[]
 }
