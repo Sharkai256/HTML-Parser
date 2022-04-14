@@ -38,7 +38,8 @@ class SimpleDOM extends SimpleNode {
 }
 
 const dom = new SimpleDOM([
-    new SimpleNode('#doctype'),
+    new SimpleNode('#comment', [], 'Start of file'),
+    new SimpleNode('#doctype', [], 'html5'),
     new SimpleElement('html', [
         new SimpleElement('head', [
             new SimpleNode('#comment', [], ' Ohayo Sekai! '),
