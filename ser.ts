@@ -1,7 +1,9 @@
 import type { SimpleDOM, Element } from './index'
 
-const serialize = (dom: SimpleDOM): string => {
-    return iterate(dom, 0)
+const serialize = (dom: any): string => {
+  //  return iterate(dom, 0)
+ // return Object.getPrototypeOf(dom.childNodes[1])
+ return dom.childNodes[1]
 }
 
 const iterate = (elem: Element, level: number): string => {
