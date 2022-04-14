@@ -17,7 +17,7 @@ class SimpleElement extends SimpleNode {
     constructor(name: string, children: (SimpleNode | SimpleElement)[] = [], attributes: {[name: string]: string} = {}) {
         super(name.toUpperCase(), children)
         this.attributes = attributes
-        this.children = <SimpleElement[]>children.filter(v => Object.getPrototypeOf(v) === SimpleElement)
+        this.children = <SimpleElement[]>children.filter(v => Object.getPrototypeOf(v) === SimpleElement.prototype)
     }
 
     get tagName() {
