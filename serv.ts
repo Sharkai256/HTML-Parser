@@ -1,4 +1,4 @@
-class SimpleNode {
+export class SimpleNode {
     childNodes: SimpleNode[]
     nodeName: string
     nodeValue: string
@@ -10,7 +10,7 @@ class SimpleNode {
     }
 }
 
-class SimpleElement extends SimpleNode {
+export class SimpleElement extends SimpleNode {
     children: SimpleElement[] = []
     attributes: {[name: string]: string}
 
@@ -28,7 +28,7 @@ class SimpleElement extends SimpleNode {
     }
 }
 
-class SimpleDOM extends SimpleNode {
+export class SimpleDOM extends SimpleNode {
     children: SimpleElement[]
 
     constructor(children: (SimpleNode | SimpleElement)[] = []) {
