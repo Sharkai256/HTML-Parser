@@ -1,43 +1,53 @@
 {
-    "tagName": "HTML",
-    "innerText": "Some text here",
-    "innerHTML": "\n<head>\n    <title>Document</title>\n</head>\n<body>\n    <div id=\"kk\">Some text here</div>\n</body>\n",
-    "outerHTML": "<html>\n<head>\n    <title>Document</title>\n</head>\n<body>\n    <div id=\"kk\">Some text here</div>\n</body>\n</html>",
-    "attributes": {},
+    "nodeName": "#root",
+    "nodeValue": null,
+    "childNodes": [
+        {
+            "nodeName": "#doctype",
+            "nodeValue": "html"
+        }
+    ],
     "children": [
         {
-            "tagName": "HEAD",
-            "innerText": "",
-            "innerHTML": "\n    <title>Document</title>\n",
-            "outerHTML": "<head>\n    <title>Document</title>\n</head>",
+            "nodeValue": null,
+            "tagName": "HTML",
             "attributes": {},
             "children": [
                 {
-                    "tagName": "TITLE",
-                    "innerText": "Document",
-                    "innerHTML": "Document",
-                    "outerHTML": "<title>Document</title>",
+                    "tagName": "HEAD",
                     "attributes": {},
-                    "children": []
-                }
-            ]
-        },
-        {
-            "tagName": "BODY",
-            "innerText": "Some text here",
-            "innerHTML": "\n    <div id=\"kk\">Some text here</div>\n",
-            "outerHTML": "<body>\n    <div id=\"kk\">Some text here</div>\n</body>",
-            "attributes": {},
-            "children": [
+                    "children": [
+                        {
+                            "nodeName": "TITLE",
+                            "tagName": "TITLE",
+                            "childNodes": [
+                                {
+                                    "nodeName": "#text",
+                                    "nodeValue": "Document"
+                                }
+                            ],
+                            "attributes": {},
+                            "children": []
+                        }
+                    ]
+                },
                 {
-                    "tagName": "DIV",
-                    "innerText": "Some text here",
-                    "innerHTML": "Some text here",
-                    "outerHTML": "<div id=\"kk\">Some text here</div>",
-                    "attributes": {
-                        "id": "kk"
-                    },
-                    "children": []
+                    "tagName": "BODY",
+                    "attributes": {},
+                    "children": [
+                        {
+                            "tagName": "DIV",
+                            "childNodes": [
+                                {
+                                    "nodeValue": "Some text here"
+                                }
+                            ],
+                            "attributes": {
+                                "id": "kk"
+                            },
+                            "children": []
+                        }
+                    ]
                 }
             ]
         }
