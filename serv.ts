@@ -33,7 +33,7 @@ class SimpleDOM extends SimpleNode {
 
     constructor(children: (SimpleNode | SimpleElement)[] = []) {
         super('#root', children)
-        this.children = <SimpleElement[]>children.filter(v => Object.getPrototypeOf(v) === SimpleElement)
+        this.children = <SimpleElement[]>children.filter(v => v instanceof SimpleElement)
     }
 }
 
