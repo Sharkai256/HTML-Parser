@@ -1,5 +1,7 @@
 import serialize from './ser'
 
+type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
+
 export class Node {
     static get ELEMENT_NODE(): 1 { return 1 }
     static get ATTRIBUTE_NODE(): 2 { return 2 }
@@ -11,11 +13,11 @@ export class Node {
     static get DOCUMENT_TYPE_NODE(): 10 { return 10 }
 
     childNodes: Node[]
-    nodeType: number
+    nodeType: NodeType
     nodeName: string
     nodeValue: string
 
-    constructor(type: number, name: string, children: Node[] = [], value: string = null) {
+    constructor(type: NodeType, name: string, children: Node[] = [], value: string = null) {
         this.nodeType = type
         this.nodeName = name
         this.childNodes = children
@@ -25,6 +27,13 @@ export class Node {
     toString() {
         return serialize(this)
     }
+
+    get [Symbol.toPrimitive]() {
+        return (hint: string) => {
+            if (hint == 'number') return this.nodeType
+            return this.toString()
+        }
+    }
 }
 
 export class Element extends Node {
@@ -33,8 +42,8 @@ export class Element extends Node {
 
     constructor(name: string, children: Node[] = [], ...attributes: Attribute[]) {
         super(Node.ELEMENT_NODE, name.toUpperCase(), children)
-        this.attributes = new AttributeMap(...attributes)
         this.children = <Element[]>children.filter(v => v instanceof Element)
+        this.attributes = new AttributeMap(...attributes)
     }
 
     get tagName() {

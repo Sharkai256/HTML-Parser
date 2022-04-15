@@ -5,7 +5,7 @@ const serialize = (dom: Simple.Node): string => {
 }
 
 const iterate = (elem: Simple.Node, level: number): string => {
-    switch (elem.nodeType) {
+    switch (+elem) {
         case Simple.Node.ELEMENT_NODE:
             return toTag(<Simple.Element>elem, false)
             + elem.childNodes.reduce((t, v) => t + iterate(v, level + 1), '')
