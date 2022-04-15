@@ -1,93 +1,53 @@
-export class SimpleNode {
-    childNodes: SimpleNode[]
-    nodeName: string
-    nodeValue: string
+import * as Simple from './classes'
 
-    constructor(name: string, children: SimpleNode[] = [], value: string = null) {
-        this.nodeName = name
-        this.childNodes = children
-        this.nodeValue = value
-    }
-}
-
-export class SimpleElement extends SimpleNode {
-    children: SimpleElement[] = []
-    attributes: {[name: string]: string}
-
-    constructor(name: string, children: (SimpleNode | SimpleElement)[] = [], attributes: {[name: string]: string} = {}) {
-        super(name.toUpperCase(), children)
-        this.attributes = attributes
-        this.children = <SimpleElement[]>children.filter(v => Object.getPrototypeOf(v) === SimpleElement.prototype)
-    }
-
-    get tagName() {
-        return this.nodeName
-    }
-    set tagName(value) {
-        this.nodeName = value.toUpperCase()
-    }
-}
-
-export class SimpleDOM extends SimpleNode {
-    children: SimpleElement[]
-
-    constructor(children: (SimpleNode | SimpleElement)[] = []) {
-        super('#root', children)
-        this.children = <SimpleElement[]>children.filter(v => v instanceof SimpleElement)
-    }
-}
-
-const dom = new SimpleDOM([
-    new SimpleNode('#comment', [], 'Start of file'),
-    new SimpleNode('#doctype', [], 'html5'),
-    new SimpleElement('html', [
-        new SimpleElement('head', [
-            new SimpleNode('#comment', [], ' Ohayo Sekai! '),
-            new SimpleElement('meta', [], {
-                charset: 'UTF-8'
-            }),
-            new SimpleElement('meta', [], {
-                'http-equip': 'X-UA-Compatible',
-                content: 'IE=edge'
-            }),
-            new SimpleElement('meta', [], {
-                name: 'viewport',
-                content: 'width=device-width, initial-scale=1.0'
-            }),
-            new SimpleElement('title', [
-                new SimpleNode('#text', [], 'Base struct + Double byte 🚀')
-            ])
+export default new Simple.DOM([
+    new Simple.Comment('Start of file'),
+    new Simple.Text('\n'),
+    new Simple.DocumentType('html'),
+    new Simple.Text('\n'),
+    new Simple.Element('html', [
+        new Simple.Text('\n'),
+        new Simple.Element('head', [
+            new Simple.Text('\n    '),
+            new Simple.Comment(' Ohayo Sekai! '),
+            new Simple.Text('\n    '),
+            new Simple.Element('meta', [], new Simple.Attribute('charset', 'UTF-8')),
+            new Simple.Text('\n    '),
+            new Simple.Element('meta', [], new Simple.Attribute('http-equip', 'X-UA-Compatible'), new Simple.Attribute('content', 'IE=edge')),
+            new Simple.Text('\n    '),
+            new Simple.Element('meta', [], new Simple.Attribute('name', 'viewport'), new Simple.Attribute('content', 'width=device-width, initial-scale=1.0')),
+            new Simple.Text('\n    '),
+            new Simple.Element('title', [
+                new Simple.Text('Base struct + Double byte 🚀')
+            ]),
+            new Simple.Text('\n')
         ]),
-        new SimpleElement('body', [
-            new SimpleElement('form', [
-                new SimpleElement('imput', [], {
-                    type: 'text',
-                    value: 'Ohayo Sekai!'
-                }),
-                new SimpleElement('select', [
-                    new SimpleElement('option', [
-                        new SimpleNode('#text', [], 'One')
-                    ], {
-                        value: 'one'
-                    }),
-                    new SimpleElement('option', [
-                        new SimpleNode('#text', [], 'Two')
-                    ], {
-                        value: 'two'
-                    }),
-                    new SimpleElement('option', [
-                        new SimpleNode('#text', [], 'Three')
-                    ], {
-                        value: 'three'
-                    })
-                ], {
-                    id: 'my-id',
-                    value: 'one',
-                    required: ''
-                })
-            ])
-        ])
+        new Simple.Text('\n'),
+        new Simple.Element('body', [
+            new Simple.Text('\n    '),
+            new Simple.Element('form', [
+                new Simple.Text('\n        '),
+                new Simple.Element('input', [], new Simple.Attribute('type', 'text'), new Simple.Attribute('value', 'Ohayo Sekai!')),
+                new Simple.Text('\n        '),
+                new Simple.Element('select', [
+                    new Simple.Text('\n            '),
+                    new Simple.Element('option', [
+                        new Simple.Text('One')
+                    ], new Simple.Attribute('value', 'one')),
+                    new Simple.Text('\n            '),
+                    new Simple.Element('option', [
+                        new Simple.Text('Two')
+                    ], new Simple.Attribute('value', 'two')),
+                    new Simple.Text('\n            '),
+                    new Simple.Element('option', [
+                        new Simple.Text('Three')
+                    ], new Simple.Attribute('value', 'three')),
+                    new Simple.Text('\n        '),
+                ], new Simple.Attribute('id', 'my-id'), new Simple.Attribute('value', 'one'), new Simple.Attribute('required', '')),
+                new Simple.Text('\n    ')
+            ]),
+            new Simple.Text('\n')
+        ]),
+        new Simple.Text('\n')
     ])
 ])
-
-export default dom
