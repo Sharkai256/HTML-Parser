@@ -28,8 +28,8 @@ class Element extends Node {
     querySelectorAll: (selector: string) => Element[] // Находит среди всех дочерних элементов те, которые подходят по селектору.
     querySelector: (selector: string) => Element // Находит первый дочерний элемент который подходит по селектору.
     getElementById: (id: string) => Element // Находит первый дочерний элемент с указанным id.
-    appendChild: (element: Element) => void // Добавляет новый дочерний элемент. { this.children.push(element) }.
-    append: (node: any) => void // Если node является объектом типа Element, то выполняет appendChild. Если нет - сериализует и добавляет как текстовую ноду.
+    ✔️ appendChild: (element: Element) => void // Добавляет новый дочерний элемент. { this.children.push(element) }.
+    ✔️append: (node: Element | string) => void // Если node является объектом типа Element, то выполняет appendChild. Если нет - сериализует и добавляет как текстовую ноду.
 }
 
 class SimpleDOM extends Element {

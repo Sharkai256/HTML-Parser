@@ -1,15 +1,15 @@
 import * as Simple from './classes'
 
 const serialize = (dom: Simple.Node): string => {
-    return iterate(dom, 0)
+    return iterate(dom)
 }
 
-const iterate = (elem: Simple.Node, level: number): string => {
+const iterate = (elem: Simple.Node): string => {
     switch (+elem) {
         case Simple.Node.ELEMENT_NODE:
             return toTag(<Simple.Element>elem, false)
-            + elem.childNodes.reduce((t, v) => t + iterate(v, level + 1), '')
-            + toTag(<Simple.Element>elem, true)
+            + (elem instanceof Simple.SingleTag ? '' : elem.childNodes.reduce((t, v) => t + iterate(v), '')
+            + toTag(<Simple.Element>elem, true))
 
         case Simple.Node.TEXT_NODE:
             return elem.nodeValue
@@ -18,10 +18,16 @@ const iterate = (elem: Simple.Node, level: number): string => {
             return '<!--' + elem.nodeValue + '-->'
 
         case Simple.Node.DOCUMENT_NODE:
-            return elem.childNodes.reduce((t, v) => t + iterate(v, 0), '')
+            return elem.childNodes.reduce((t, v) => t + iterate(v), '')
 
         case Simple.Node.DOCUMENT_TYPE_NODE:
             return '<!DOCTYPE ' + elem.nodeName + '>'
+
+        case Simple.Node.PROCESSING_INSTRUCTION_NODE:
+            return '<?' + elem.nodeName + ' ' + elem.nodeValue + ' ?>'
+        
+        case Simple.Node.CDATA_SECTION_NODE:
+            return '<![CDATA[' + elem.nodeName + ']]>'    
 
         default:
             return '<!-- Err: Undefined Node Type -->'
@@ -37,6 +43,10 @@ const toTag = (elem: Simple.Element, closed: boolean): string => {
         for (let i = 0; i < elem.attributes.length; i++) {
             ret += ' ' + elem.attributes.item(i)
         }
+    }
+    
+    if ((<Simple.SingleTag>elem).endClosed) {
+        ret += '/'
     }
 
     return ret + '>'

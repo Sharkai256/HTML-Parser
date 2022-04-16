@@ -11,11 +11,11 @@ export default new Simple.DOM([
             new Simple.Text('\n    '),
             new Simple.Comment(' Ohayo Sekai! '),
             new Simple.Text('\n    '),
-            new Simple.Element('meta', [], new Simple.Attribute('charset', 'UTF-8')),
+            new Simple.SingleTag('meta', false, new Simple.Attribute('charset', 'UTF-8')),
             new Simple.Text('\n    '),
-            new Simple.Element('meta', [], new Simple.Attribute('http-equip', 'X-UA-Compatible'), new Simple.Attribute('content', 'IE=edge')),
+            new Simple.SingleTag('meta', false, new Simple.Attribute('http-equip', 'X-UA-Compatible'), new Simple.Attribute('content', 'IE=edge')),
             new Simple.Text('\n    '),
-            new Simple.Element('meta', [], new Simple.Attribute('name', 'viewport'), new Simple.Attribute('content', 'width=device-width, initial-scale=1.0')),
+            new Simple.SingleTag('meta', false, new Simple.Attribute('name', 'viewport'), new Simple.Attribute('content', 'width=device-width, initial-scale=1.0')),
             new Simple.Text('\n    '),
             new Simple.Element('title', [
                 new Simple.Text('Base struct + Double byte 🚀')
@@ -27,7 +27,7 @@ export default new Simple.DOM([
             new Simple.Text('\n    '),
             new Simple.Element('form', [
                 new Simple.Text('\n        '),
-                new Simple.Element('input', [], new Simple.Attribute('type', 'text'), new Simple.Attribute('value', 'Ohayo Sekai!')),
+                new Simple.SingleTag('input', true, new Simple.Attribute('type', 'text'), new Simple.Attribute('value', 'Ohayo Sekai!')),
                 new Simple.Text('\n        '),
                 new Simple.Element('select', [
                     new Simple.Text('\n            '),

@@ -37,13 +37,28 @@ export class Node {
 }
 
 export class Element extends Node {
-    children: Element[] = []
     attributes: AttributeMap
 
     constructor(name: string, children: Node[] = [], ...attributes: Attribute[]) {
         super(Node.ELEMENT_NODE, name.toUpperCase(), children)
-        this.children = <Element[]>children.filter(v => v instanceof Element)
         this.attributes = new AttributeMap(...attributes)
+    }
+
+    appendChild(element: Element) {
+        this.childNodes.push(element)
+    }
+
+    append(node: Element | string) {
+        if (node instanceof Element) {
+            this.appendChild(node)
+        }
+        else {
+            this.childNodes.push(new Text(node))
+        }
+    }
+
+    get children(): Element[] {
+        return <Element[]>this.childNodes.filter(v => v instanceof Element) 
     }
 
     get tagName() {
@@ -54,9 +69,16 @@ export class Element extends Node {
     }
 }
 
-export class DOM extends Element {
-    children: Element[] = []
+export class SingleTag extends Element {
+    endClosed: boolean
 
+    constructor(name: string, endClosed: boolean = true, ...attributes: Attribute[]) {
+        super(name, [], ...attributes)
+        this.endClosed = endClosed 
+    }
+}
+
+export class DOM extends Element {
     constructor(children: Node[] = []) {
         super('', children)
         this.nodeName = '#document'
@@ -147,5 +169,17 @@ export class AttributeMap {
 
     get length() {
         return this.#items.length
+    }
+}
+
+export class ProcessingInstruction extends Node {
+    constructor(name: string, instruction: string) {
+        super(Node.PROCESSING_INSTRUCTION_NODE, name, [], instruction)
+    } 
+}
+
+export class CDATA extends Node {
+    constructor(data: string) {
+        super(Node.CDATA_SECTION_NODE, data)
     }
 }
