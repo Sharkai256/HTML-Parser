@@ -7,9 +7,9 @@
 
 ```TS
 class Node {
-    🚧 get nodeType: number // 1 - element, 2 - attribute, 3 - text, 4 - cdata, 7 - processing instruction, 8 - comment, 9 - document, 10 - doctype
-    🚧 get nodeName: string // Имя тега, '#text' для текстовых нод, '#document' для рута документа, '#comment' для комментариев и '#doctype' для !DOCTYPE.
-    🚧 get nodeValue: string | null // Содержимое текстовой ноды, либо null.
+    ✔️get nodeType: number // 1 - element, 2 - attribute, 3 - text, 4 - cdata, 7 - processing instruction, 8 - comment, 9 - document, 10 - doctype
+    ✔️get nodeName: string // Имя тега, '#text' для текстовых нод, '#document' для рута документа, '#comment' для комментариев и '#doctype' для !DOCTYPE.
+    ✔️get nodeValue: string | null // Содержимое текстовой ноды, либо null.
     🚧 get | set textContent: string // Содержимое дочерних текстовых нод. При присвоении заменяет все дочерние ноды на текстовую с заданным значением.
     ✔️ get childNodes: Node[] // Массив прямых дочерних нод.
     get parentNode: Node | null // Родительская нода.

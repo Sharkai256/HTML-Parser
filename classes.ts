@@ -14,9 +14,21 @@ export class Node {
 
     #childNodes: Node[]
 
-    nodeType: NodeType // ⤵
-    nodeName: string   // ⤵
-    nodeValue: string  // Сделать их приватными и доступными только через геттер
+    _nodeType: NodeType 
+    _nodeName: string   
+    _nodeValue: string  
+
+    get nodeType() {
+        return this._nodeType
+    }
+
+    get nodeName() {
+        return this._nodeName
+    }
+
+    get nodeValue() {
+        return this._nodeValue
+    }
 
     constructor(
         type: NodeType,
@@ -24,10 +36,10 @@ export class Node {
         children: Node[] = [],
         value: string = null
     ) {
-        this.nodeType = type
-        this.nodeName = name
+        this._nodeType = type
+        this._nodeName = name
         this.#childNodes = children
-        this.nodeValue = value
+        this._nodeValue = value
     }
 
     appendChild(element: Node) { // Предусмотреть перегрузки с ошибкой для наследующих классов
@@ -97,8 +109,8 @@ export class SingleTag extends Element {
 export class DOM extends Element {
     constructor(children: Node[] = []) {
         super('', children)
-        this.nodeName = '#document'
-        this.nodeType = Node.DOCUMENT_NODE
+        this._nodeName = '#document'
+        this._nodeType = Node.DOCUMENT_NODE
     }
 
     createElement(tagName: string) {
@@ -133,14 +145,14 @@ export class Attribute extends Node {
         return this.nodeName
     }
     set name(value) {
-        this.nodeName = value
+        this._nodeName = value
     }
 
     get value() {
         return this.nodeValue
     }
     set value(value) {
-        this.nodeValue = value
+        this._nodeValue = value
     }
 }
 
