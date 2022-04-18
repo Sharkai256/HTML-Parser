@@ -12,20 +12,34 @@ export class Node {
     static get DOCUMENT_NODE(): 9 { return 9 }
     static get DOCUMENT_TYPE_NODE(): 10 { return 10 }
 
-    childNodes: Node[]
-    nodeType: NodeType
-    nodeName: string
-    nodeValue: string
+    #childNodes: Node[]
 
-    constructor(type: NodeType, name: string, children: Node[] = [], value: string = null) {
+    nodeType: NodeType // ⤵
+    nodeName: string   // ⤵
+    nodeValue: string  // Сделать их приватными и доступными только через геттер
+
+    constructor(
+        type: NodeType,
+        name: string,
+        children: Node[] = [],
+        value: string = null
+    ) {
         this.nodeType = type
         this.nodeName = name
-        this.childNodes = children
+        this.#childNodes = children
         this.nodeValue = value
+    }
+
+    appendChild(element: Node) { // Предусмотреть перегрузки с ошибкой для наследующих классов
+        this.#childNodes.push(element)
     }
 
     toString() {
         return serialize(this)
+    }
+
+    get childNodes() {
+        return [...this.#childNodes]
     }
 
     get [Symbol.toPrimitive]() {
@@ -39,42 +53,44 @@ export class Node {
 export class Element extends Node {
     attributes: AttributeMap
 
-    constructor(name: string, children: Node[] = [], ...attributes: Attribute[]) {
-        super(Node.ELEMENT_NODE, name.toUpperCase(), children)
+    constructor(
+        name: string,
+        childNodes: Node[] = [],
+        ...attributes: Attribute[]
+    ) {
+        super(Node.ELEMENT_NODE, name.toUpperCase(), childNodes)
         this.attributes = new AttributeMap(...attributes)
     }
 
-    appendChild(element: Element) {
-        this.childNodes.push(element)
-    }
-
-    append(node: Element | string) {
-        if (node instanceof Element) {
+    append(node: Node | string) {
+        if (node instanceof Node) {
             this.appendChild(node)
         }
         else {
-            this.childNodes.push(new Text(node))
+            this.appendChild(new Text(node))
         }
+        this.appendChild(node instanceof Node ? node : new Text(node))
     }
 
     get children(): Element[] {
-        return <Element[]>this.childNodes.filter(v => v instanceof Element) 
+        return <Element[]>this.childNodes.filter(v => v instanceof Element)
     }
 
     get tagName() {
         return this.nodeName
-    }
-    set tagName(value) {
-        this.nodeName = value.toUpperCase()
     }
 }
 
 export class SingleTag extends Element {
     endClosed: boolean
 
-    constructor(name: string, endClosed: boolean = true, ...attributes: Attribute[]) {
+    constructor(
+        name: string,
+        endClosed: boolean = false,
+        ...attributes: Attribute[]
+    ) {
         super(name, [], ...attributes)
-        this.endClosed = endClosed 
+        this.endClosed = endClosed
     }
 }
 
@@ -126,10 +142,6 @@ export class Attribute extends Node {
     set value(value) {
         this.nodeValue = value
     }
-
-    get [Symbol.toPrimitive]() {
-        return () => `${this.name}="${this.value}"`
-    }
 }
 
 export class AttributeMap {
@@ -175,7 +187,7 @@ export class AttributeMap {
 export class ProcessingInstruction extends Node {
     constructor(name: string, instruction: string) {
         super(Node.PROCESSING_INSTRUCTION_NODE, name, [], instruction)
-    } 
+    }
 }
 
 export class CDATA extends Node {
