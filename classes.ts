@@ -12,11 +12,12 @@ export class Node {
     static get DOCUMENT_NODE(): 9 { return 9 }
     static get DOCUMENT_TYPE_NODE(): 10 { return 10 }
 
-    #childNodes: Node[]
+    #childNodes: Node[] = []
     #nodeType: NodeType
     #nodeName: string
     #nodeValue: string
-
+    #parentNode: Node = null
+    
     constructor(
         type: NodeType,
         name: string,
@@ -25,12 +26,21 @@ export class Node {
     ) {
         this.#nodeType = type
         this.#nodeName = name
-        this.#childNodes = children
+        for (const child of children) {
+            this.appendChild(child)
+        }
         this.#nodeValue = value
     }
 
     appendChild(element: Node) {
         this.#childNodes.push(element)
+        element.#parentNode = this
+    }
+
+    remove() {
+        const i = this.#parentNode.#childNodes.findIndex(v => this === v)
+        this.#parentNode.#childNodes.splice(i, 1)
+        this.#parentNode = null
     }
 
     toString() {
@@ -59,6 +69,14 @@ export class Node {
 
     set textContent(text: string) {
         this.#childNodes = [new Text(text)]
+    }
+
+    get parentNode() {
+        return this.#parentNode 
+    }
+
+    get parentElement() {
+        return (this.#parentNode instanceof Element ? this.#parentNode : null)
     }
 
     get [Symbol.toPrimitive]() {
@@ -97,6 +115,14 @@ export class Element extends Node {
 
     get tagName() {
         return this.nodeName
+    }
+
+    get innerText() {
+        return this.textContent
+    }
+
+    set innerText(value) {
+        this.textContent = value
     }
 }
 
