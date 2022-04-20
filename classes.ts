@@ -38,8 +38,8 @@ export class Node {
     }
 
     remove() {
-        const i = this.#parentNode.#childNodes.findIndex(v => this === v)
-        this.#parentNode.#childNodes.splice(i, 1)
+        const cN = this.#parentNode.#childNodes
+        cN.splice(cN.indexOf(this), 1)
         this.#parentNode = null
     }
 
