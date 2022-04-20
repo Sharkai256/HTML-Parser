@@ -13,22 +13,9 @@ export class Node {
     static get DOCUMENT_TYPE_NODE(): 10 { return 10 }
 
     #childNodes: Node[]
-
-    #nodeType: NodeType 
-    #nodeName: string   
-    #nodeValue: string  
-
-    get nodeType() {
-        return this.#nodeType
-    }
-
-    get nodeName() {
-        return this.#nodeName
-    }
-
-    get nodeValue() {
-        return this.#nodeValue
-    }
+    #nodeType: NodeType
+    #nodeName: string
+    #nodeValue: string
 
     constructor(
         type: NodeType,
@@ -48,6 +35,18 @@ export class Node {
 
     toString() {
         return serialize(this)
+    }
+
+    get nodeType() {
+        return this.#nodeType
+    }
+
+    get nodeName() {
+        return this.#nodeName
+    }
+
+    get nodeValue() {
+        return this.#nodeValue
     }
 
     get childNodes() {
