@@ -29,7 +29,7 @@ export class Node {
         this.#nodeValue = value
     }
 
-    appendChild(element: Node) { // Предусмотреть перегрузки с ошибкой для наследующих классов
+    appendChild(element: Node) {
         this.#childNodes.push(element)
     }
 
@@ -51,6 +51,14 @@ export class Node {
 
     get childNodes() {
         return [...this.#childNodes]
+    }
+
+    get textContent() {
+        return this.#childNodes.map(v => v instanceof Text ? v.nodeValue : v.textContent).join('')
+    }
+
+    set textContent(text: string) {
+        this.#childNodes = [new Text(text)]
     }
 
     get [Symbol.toPrimitive]() {
@@ -127,11 +135,18 @@ export class Comment extends Node {
     constructor(text: string) {
         super(Node.COMMENT_NODE, '#comment', [], text)
     }
+
+    appendChild(element: Node): void {
+        throw new Error('Comment can not have children')
+    }
 }
 
 export class DocumentType extends Node {
     constructor(type: string) {
         super(Node.DOCUMENT_TYPE_NODE, type)
+    }
+    appendChild(element: Node): void {
+        throw new Error('DocumentType can not have children')
     }
 }
 
@@ -172,12 +187,15 @@ export class Attribute extends Node {
     set value(value) {
         this.#nodeValue = value
     }
+
+    appendChild(element: Node): void {
+        throw new Error('Attribute can not have children')
+    }
 }
 
 export class AttributeMap {
     #items: Attribute[] = []
     #itemsMap: {[name: string]: number} = {}
-
     constructor(...attributes: Attribute[]) {
         for (const attr of attributes) {
             this.set(attr)
@@ -218,10 +236,16 @@ export class ProcessingInstruction extends Node {
     constructor(name: string, instruction: string) {
         super(Node.PROCESSING_INSTRUCTION_NODE, name, [], instruction)
     }
+    appendChild(element: Node): void {
+        throw new Error('ProcessingInstruction can not have children')
+    }
 }
 
 export class CDATA extends Node {
     constructor(data: string) {
         super(Node.CDATA_SECTION_NODE, data)
+    }
+    appendChild(element: Node): void {
+        throw new Error('CDATA can not have children')
     }
 }
