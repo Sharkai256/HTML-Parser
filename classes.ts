@@ -14,20 +14,20 @@ export class Node {
 
     #childNodes: Node[]
 
-    _nodeType: NodeType 
-    _nodeName: string   
-    _nodeValue: string  
+    #nodeType: NodeType 
+    #nodeName: string   
+    #nodeValue: string  
 
     get nodeType() {
-        return this._nodeType
+        return this.#nodeType
     }
 
     get nodeName() {
-        return this._nodeName
+        return this.#nodeName
     }
 
     get nodeValue() {
-        return this._nodeValue
+        return this.#nodeValue
     }
 
     constructor(
@@ -36,10 +36,10 @@ export class Node {
         children: Node[] = [],
         value: string = null
     ) {
-        this._nodeType = type
-        this._nodeName = name
+        this.#nodeType = type
+        this.#nodeName = name
         this.#childNodes = children
-        this._nodeValue = value
+        this.#nodeValue = value
     }
 
     appendChild(element: Node) { // Предусмотреть перегрузки с ошибкой для наследующих классов
@@ -109,12 +109,18 @@ export class SingleTag extends Element {
 export class DOM extends Element {
     constructor(children: Node[] = []) {
         super('', children)
-        this._nodeName = '#document'
-        this._nodeType = Node.DOCUMENT_NODE
     }
 
     createElement(tagName: string) {
         return new Element(tagName)
+    }
+
+    get nodeName() {
+        return '#document'
+    }
+
+    get nodeType() {
+        return Node.DOCUMENT_NODE
     }
 }
 
@@ -137,22 +143,35 @@ export class Text extends Node {
 }
 
 export class Attribute extends Node {
+    #nodeName: string
+    #nodeValue: string
+
     constructor(name: string, value: string) {
         super(Node.ATTRIBUTE_NODE, name, [], value)
+        this.#nodeName = name
+        this.#nodeValue = value
+    }
+
+    get nodeName() {
+        return this.#nodeName
+    }
+
+    get nodeValue() {
+        return this.#nodeValue
     }
 
     get name() {
-        return this.nodeName
+        return this.#nodeName
     }
     set name(value) {
-        this._nodeName = value
+        this.#nodeName = value
     }
 
     get value() {
-        return this.nodeValue
+        return this.#nodeValue
     }
     set value(value) {
-        this._nodeValue = value
+        this.#nodeValue = value
     }
 }
 
