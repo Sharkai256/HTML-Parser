@@ -45,4 +45,8 @@ class SingleTag extends Element {
 class Comment extends Node {
     ⚠️ constructor()
 }
+
+class DocumentType extends Node {
+    ⚠️ constructor()
+}
 ```
