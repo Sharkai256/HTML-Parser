@@ -12,10 +12,10 @@ export class Node {
     static get DOCUMENT_NODE(): 9 { return 9 }
     static get DOCUMENT_TYPE_NODE(): 10 { return 10 }
 
-    #childNodes: Node[] = []
     #nodeType: NodeType
     #nodeName: string
     #nodeValue: string
+    #childNodes: Node[] = []
     #parentNode: Node = null
     
     constructor(
@@ -32,9 +32,14 @@ export class Node {
         this.#nodeValue = value
     }
 
-    appendChild(element: Node) {
-        this.#childNodes.push(element)
-        element.#parentNode = this
+    //! Нода не может существовать в двух местах одновременно.
+    //! div1.appendChild(a); div2.appendChild(a); - выдаст неправильный результат.
+    //* Для SingleTag функция тоже должна выдавать ошибку.
+    //! DOM нельзя аппендить.
+    //! Attribute нельзя аппендить.
+    appendChild(node: Node) {
+        this.#childNodes.push(node)
+        node.#parentNode = this
     }
 
     remove() {
@@ -66,7 +71,6 @@ export class Node {
     get textContent() {
         return this.#childNodes.map(v => v instanceof Text ? v.nodeValue : v.textContent).join('')
     }
-
     set textContent(text: string) {
         this.#childNodes = [new Text(text)]
     }
@@ -120,14 +124,13 @@ export class Element extends Node {
     get innerText() {
         return this.textContent
     }
-
     set innerText(value) {
         this.textContent = value
     }
 }
 
 export class SingleTag extends Element {
-    endClosed: boolean
+    endClosed: boolean //! Должно быть приватным.
 
     constructor(
         name: string,
@@ -140,8 +143,8 @@ export class SingleTag extends Element {
 }
 
 export class DOM extends Element {
-    constructor(children: Node[] = []) {
-        super('', children)
+    constructor(childNodes: Node[] = []) {
+        super('', childNodes)
     }
 
     createElement(tagName: string) {
@@ -158,20 +161,20 @@ export class DOM extends Element {
 }
 
 export class Comment extends Node {
-    constructor(text: string) {
+    constructor(text: string) { //! text должен быть опциональным.
         super(Node.COMMENT_NODE, '#comment', [], text)
     }
 
-    appendChild(element: Node): void {
+    appendChild() {
         throw new Error('Comment can not have children')
     }
 }
 
 export class DocumentType extends Node {
-    constructor(type: string) {
+    constructor(type: string) { //! type должен быть опциональным.
         super(Node.DOCUMENT_TYPE_NODE, type)
     }
-    appendChild(element: Node): void {
+    appendChild() {
         throw new Error('DocumentType can not have children')
     }
 }
@@ -214,7 +217,7 @@ export class Attribute extends Node {
         this.#nodeValue = value
     }
 
-    appendChild(element: Node): void {
+    appendChild() {
         throw new Error('Attribute can not have children')
     }
 }
@@ -262,7 +265,7 @@ export class ProcessingInstruction extends Node {
     constructor(name: string, instruction: string) {
         super(Node.PROCESSING_INSTRUCTION_NODE, name, [], instruction)
     }
-    appendChild(element: Node): void {
+    appendChild() {
         throw new Error('ProcessingInstruction can not have children')
     }
 }
@@ -271,7 +274,7 @@ export class CDATA extends Node {
     constructor(data: string) {
         super(Node.CDATA_SECTION_NODE, data)
     }
-    appendChild(element: Node): void {
+    appendChild() {
         throw new Error('CDATA can not have children')
     }
 }
