@@ -34,10 +34,9 @@ export class Node {
 
     //! Нода не может существовать в двух местах одновременно.
     //! div1.appendChild(a); div2.appendChild(a); - выдаст неправильный результат.
-    //* Для SingleTag функция тоже должна выдавать ошибку.
-    //! DOM нельзя аппендить.
-    //! Attribute нельзя аппендить.
     appendChild(node: Node) {
+        if (node instanceof Attribute) throw new Error('Attribute can not be appended')
+        if (node instanceof DOM) throw new Error('DOM can not be appended')
         this.#childNodes.push(node)
         node.#parentNode = this
     }
@@ -130,7 +129,7 @@ export class Element extends Node {
 }
 
 export class SingleTag extends Element {
-    endClosed: boolean //! Должно быть приватным.
+    #endClosed: boolean
 
     constructor(
         name: string,
@@ -138,7 +137,13 @@ export class SingleTag extends Element {
         ...attributes: Attribute[]
     ) {
         super(name, [], ...attributes)
-        this.endClosed = endClosed
+        this.#endClosed = endClosed
+    }
+    get endClosed() {
+        return this.#endClosed
+    }
+    appendChild() {
+        throw new Error('SingleTag can not have children')
     }
 }
 
@@ -161,7 +166,7 @@ export class DOM extends Element {
 }
 
 export class Comment extends Node {
-    constructor(text: string) { //! text должен быть опциональным.
+    constructor(text: string = '') {
         super(Node.COMMENT_NODE, '#comment', [], text)
     }
 
@@ -171,7 +176,7 @@ export class Comment extends Node {
 }
 
 export class DocumentType extends Node {
-    constructor(type: string) { //! type должен быть опциональным.
+    constructor(type: string = 'html') {
         super(Node.DOCUMENT_TYPE_NODE, type)
     }
     appendChild() {
@@ -195,6 +200,10 @@ export class Attribute extends Node {
         this.#nodeValue = value
     }
 
+    appendChild() {
+        throw new Error('Attribute can not have children')
+    }
+
     get nodeName() {
         return this.#nodeName
     }
@@ -215,10 +224,6 @@ export class Attribute extends Node {
     }
     set value(value) {
         this.#nodeValue = value
-    }
-
-    appendChild() {
-        throw new Error('Attribute can not have children')
     }
 }
 
