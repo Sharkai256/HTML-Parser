@@ -58,7 +58,7 @@ const test = (name: number | string) => {
     if (fs.existsSync(`tests/${name}.json`) && state == '\x1b[31mErr: Test not found') {
         const json = JSON.parse(fs.readFileSync(`tests/${name}.json`).toString())
         try {
-            iterateObject(json, parsed, 'html')
+            iterateObject(json, parsed, 'root')
             state = '\x1b[32mPassed'
         } catch (err) {
             state = `\x1b[31mErr: ${(<Error>err).message}`

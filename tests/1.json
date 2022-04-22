@@ -3,8 +3,7 @@
     "nodeValue": null,
     "childNodes": [
         {
-            "nodeName": "#doctype",
-            "nodeValue": "html"
+            "nodeName": "html"
         }
     ],
     "children": [
