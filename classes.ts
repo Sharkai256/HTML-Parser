@@ -12,11 +12,12 @@ export class Node {
     static get DOCUMENT_NODE(): 9 { return 9 }
     static get DOCUMENT_TYPE_NODE(): 10 { return 10 }
 
-    #childNodes: Node[]
     #nodeType: NodeType
     #nodeName: string
     #nodeValue: string
-
+    #childNodes: Node[] = []
+    #parentNode: Node = null
+    
     constructor(
         type: NodeType,
         name: string,
@@ -25,12 +26,25 @@ export class Node {
     ) {
         this.#nodeType = type
         this.#nodeName = name
-        this.#childNodes = children
+        for (const child of children) {
+            this.appendChild(child)
+        }
         this.#nodeValue = value
     }
 
-    appendChild(element: Node) { // Предусмотреть перегрузки с ошибкой для наследующих классов
-        this.#childNodes.push(element)
+    //! Нода не может существовать в двух местах одновременно.
+    //! div1.appendChild(a); div2.appendChild(a); - выдаст неправильный результат.
+    appendChild(node: Node) {
+        if (node instanceof Attribute) throw new Error('Attribute can not be appended')
+        if (node instanceof DOM) throw new Error('DOM can not be appended')
+        this.#childNodes.push(node)
+        node.#parentNode = this
+    }
+
+    remove() {
+        const cN = this.#parentNode.#childNodes
+        cN.splice(cN.indexOf(this), 1)
+        this.#parentNode = null
     }
 
     toString() {
@@ -51,6 +65,21 @@ export class Node {
 
     get childNodes() {
         return [...this.#childNodes]
+    }
+
+    get textContent() {
+        return this.#childNodes.map(v => v instanceof Text ? v.nodeValue : v.textContent).join('')
+    }
+    set textContent(text: string) {
+        this.#childNodes = [new Text(text)]
+    }
+
+    get parentNode() {
+        return this.#parentNode 
+    }
+
+    get parentElement() {
+        return (this.#parentNode instanceof Element ? this.#parentNode : null)
     }
 
     get [Symbol.toPrimitive]() {
@@ -90,10 +119,17 @@ export class Element extends Node {
     get tagName() {
         return this.nodeName
     }
+
+    get innerText() {
+        return this.textContent
+    }
+    set innerText(value) {
+        this.textContent = value
+    }
 }
 
 export class SingleTag extends Element {
-    endClosed: boolean
+    #endClosed: boolean
 
     constructor(
         name: string,
@@ -101,13 +137,19 @@ export class SingleTag extends Element {
         ...attributes: Attribute[]
     ) {
         super(name, [], ...attributes)
-        this.endClosed = endClosed
+        this.#endClosed = endClosed
+    }
+    get endClosed() {
+        return this.#endClosed
+    }
+    appendChild() {
+        throw new Error('SingleTag can not have children')
     }
 }
 
 export class DOM extends Element {
-    constructor(children: Node[] = []) {
-        super('', children)
+    constructor(childNodes: Node[] = []) {
+        super('', childNodes)
     }
 
     createElement(tagName: string) {
@@ -124,14 +166,21 @@ export class DOM extends Element {
 }
 
 export class Comment extends Node {
-    constructor(text: string) {
+    constructor(text: string = '') {
         super(Node.COMMENT_NODE, '#comment', [], text)
+    }
+
+    appendChild() {
+        throw new Error('Comment can not have children')
     }
 }
 
 export class DocumentType extends Node {
-    constructor(type: string) {
+    constructor(type: string = 'html') {
         super(Node.DOCUMENT_TYPE_NODE, type)
+    }
+    appendChild() {
+        throw new Error('DocumentType can not have children')
     }
 }
 
@@ -149,6 +198,10 @@ export class Attribute extends Node {
         super(Node.ATTRIBUTE_NODE, name, [], value)
         this.#nodeName = name
         this.#nodeValue = value
+    }
+
+    appendChild() {
+        throw new Error('Attribute can not have children')
     }
 
     get nodeName() {
@@ -177,7 +230,6 @@ export class Attribute extends Node {
 export class AttributeMap {
     #items: Attribute[] = []
     #itemsMap: {[name: string]: number} = {}
-
     constructor(...attributes: Attribute[]) {
         for (const attr of attributes) {
             this.set(attr)
@@ -218,10 +270,16 @@ export class ProcessingInstruction extends Node {
     constructor(name: string, instruction: string) {
         super(Node.PROCESSING_INSTRUCTION_NODE, name, [], instruction)
     }
+    appendChild() {
+        throw new Error('ProcessingInstruction can not have children')
+    }
 }
 
 export class CDATA extends Node {
     constructor(data: string) {
         super(Node.CDATA_SECTION_NODE, data)
+    }
+    appendChild() {
+        throw new Error('CDATA can not have children')
     }
 }
