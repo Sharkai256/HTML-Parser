@@ -17,7 +17,7 @@ export class Node {
     #nodeValue: string
     #childNodes: Node[] = []
     #parentNode: Node = null
-    
+
     constructor(
         type: NodeType,
         name: string,
@@ -75,7 +75,7 @@ export class Node {
     }
 
     get parentNode() {
-        return this.#parentNode 
+        return this.#parentNode
     }
 
     get parentElement() {
@@ -139,11 +139,49 @@ export class SingleTag extends Element {
         super(name, [], ...attributes)
         this.#endClosed = endClosed
     }
+
+    appendChild() {
+        throw new Error('SingleTag can not have children')
+    }
+
     get endClosed() {
         return this.#endClosed
     }
+}
+
+export class Text extends Node {
+    constructor(text: string) {
+        super(Node.TEXT_NODE, '#text', [], text)
+    }
+}
+
+export class CDATA extends Node {
+    constructor(data: string) {
+        super(Node.CDATA_SECTION_NODE, data)
+    }
+
     appendChild() {
-        throw new Error('SingleTag can not have children')
+        throw new Error('CDATA can not have children')
+    }
+}
+
+export class ProcessingInstruction extends Node {
+    constructor(name: string, instruction: string) {
+        super(Node.PROCESSING_INSTRUCTION_NODE, name, [], instruction)
+    }
+
+    appendChild() {
+        throw new Error('ProcessingInstruction can not have children')
+    }
+}
+
+export class Comment extends Node {
+    constructor(text: string = '') {
+        super(Node.COMMENT_NODE, '#comment', [], text)
+    }
+
+    appendChild() {
+        throw new Error('Comment can not have children')
     }
 }
 
@@ -165,28 +203,13 @@ export class DOM extends Element {
     }
 }
 
-export class Comment extends Node {
-    constructor(text: string = '') {
-        super(Node.COMMENT_NODE, '#comment', [], text)
-    }
-
-    appendChild() {
-        throw new Error('Comment can not have children')
-    }
-}
-
 export class DocumentType extends Node {
     constructor(type: string = 'html') {
         super(Node.DOCUMENT_TYPE_NODE, type)
     }
+
     appendChild() {
         throw new Error('DocumentType can not have children')
-    }
-}
-
-export class Text extends Node {
-    constructor(text: string) {
-        super(Node.TEXT_NODE, '#text', [], text)
     }
 }
 
@@ -230,6 +253,7 @@ export class Attribute extends Node {
 export class AttributeMap {
     #items: Attribute[] = []
     #itemsMap: {[name: string]: number} = {}
+
     constructor(...attributes: Attribute[]) {
         for (const attr of attributes) {
             this.set(attr)
@@ -263,23 +287,5 @@ export class AttributeMap {
 
     get length() {
         return this.#items.length
-    }
-}
-
-export class ProcessingInstruction extends Node {
-    constructor(name: string, instruction: string) {
-        super(Node.PROCESSING_INSTRUCTION_NODE, name, [], instruction)
-    }
-    appendChild() {
-        throw new Error('ProcessingInstruction can not have children')
-    }
-}
-
-export class CDATA extends Node {
-    constructor(data: string) {
-        super(Node.CDATA_SECTION_NODE, data)
-    }
-    appendChild() {
-        throw new Error('CDATA can not have children')
     }
 }

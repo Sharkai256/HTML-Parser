@@ -1,77 +1,72 @@
-import * as Simple from './classes'
+import * as Simple from './classes';
 
 export default (html: string): Simple.DOM => {
     var tags: Simple.Node[] = [];
     var inTag = false;
     var buffer = '';
     label1: for (const char of html) {
-        if(char == '>'){
+        if (char == '>') {
             inTag = false;
-            if(buffer[0] == '!'){
-                if(/!\[CDATA\[.*\]\]/s.test(buffer)){
-                    tags.push(new Simple.CDATA(buffer.substring(8, buffer.length - 2)))
+            if (buffer[0] == '!') {
+                if (/!\[CDATA\[.*\]\]/s.test(buffer)) {
+                    tags.push(new Simple.CDATA(buffer.substring(8, buffer.length - 2)));
+                } else if (/!--.*--/s.test(buffer)) {
+                    tags.push(new Simple.Comment(buffer.substring(3, buffer.length - 2)));
+                } else if (/!DOCTYPE .*/s.test(buffer)) {
+                    tags.push(new Simple.DocumentType(buffer.substring(9)));
                 }
-                else if(/!--.*--/s.test(buffer)){
-                    tags.push(new Simple.Comment(buffer.substring(3, buffer.length - 2)))
-                }
-                else if(/!DOCTYPE .*/s.test(buffer)){
-                    tags.push(new Simple.DocumentType(buffer.substring(9)))
-                }
-            }
-            else if(buffer[0] == '?'){
+            } else if (buffer[0] == '?') {
                 const array = /\?([a-z]+)\s(.*)\s\?/s.exec(buffer);
                 tags.push(new Simple.ProcessingInstruction(array[1], array[2]));
-            }
-            else{
-                if(buffer[0] == '/'){
+            } else {
+                if (buffer[0] == '/') {
                     buffer = buffer.substring(1);
                     var array = [];
-                    for(let i=tags.length-1;i>=0;i--){
+                    for (let i = tags.length - 1; i >= 0; i--) {
                         const item = tags[i];
-                        if(item instanceof Simple.SingleTag && item.nodeName == buffer.toUpperCase()){
+                        if (item instanceof Simple.SingleTag && item.nodeName == buffer.toUpperCase()) {
                             let atrArr = [];
-                            for(let j=0;j<item.attributes.length;j++){
-                                atrArr.push(item.attributes.item(j))
+                            for (let j = 0; j < item.attributes.length; j++) {
+                                atrArr.push(item.attributes.item(j));
                             }
-                            tags[i] = new Simple.Element(buffer, array.reverse(), ...atrArr)
+                            tags[i] = new Simple.Element(buffer, array.reverse(), ...atrArr);
                             buffer = '';
                             continue label1;
-                        }
-                        else{
+                        } else {
                             array.push(tags.pop());
                         }
                     }
                     throw new Error(`Invalid HTML input (No opening tag) [${buffer}]`);
                 }
-                const sIndx = buffer.indexOf(' ')
+                const sIndx = buffer.indexOf(' ');
                 let name = buffer;
                 let atrArr = [];
-                if(sIndx !== -1){
+                if (sIndx != -1) {
                     name = buffer.substring(0, sIndx);
                     const atr = buffer.substring(sIndx);
                     atrArr = atr.match(/[a-z-]+(=(".+?"|'.+?'|\S+))?/g).map(v => {
                         const [, atrName, atrValue] = /([a-z-]+)(?:=(.+))?/.exec(v);
-                        if(typeof atrValue == 'undefined') return new Simple.Attribute(atrName, '');  
-                        if(atrValue[0] !== '"' && atrValue[0] !== "'") return new Simple.Attribute(atrName, atrValue);
-                        return new Simple.Attribute(atrName, atrValue.substring(1, atrValue.length-1));
+                        if (typeof atrValue == 'undefined') return new Simple.Attribute(atrName, '');
+                        if (atrValue[0] != '"' && atrValue[0] != "'") return new Simple.Attribute(atrName, atrValue);
+                        return new Simple.Attribute(atrName, atrValue.substring(1, atrValue.length - 1));
                     });
                 }
-                tags.push(new Simple.SingleTag(name, buffer[buffer.length-1] == '/', ...atrArr))
+                tags.push(new Simple.SingleTag(name, buffer[buffer.length - 1] == '/', ...atrArr));
             }
             buffer = '';
         }
-        if(inTag){
+        if (inTag) {
             buffer += char;
         }
-        if(char == '<'){
+        if (char == '<') {
             inTag = true;
             buffer = buffer.replace('>', '');
-            if(buffer.length){
+            if (buffer.length) {
                 tags.push(new Simple.Text(buffer));
             }
             buffer = '';
         }
-        if(!inTag){
+        if (!inTag) {
             buffer += char;
         }
     }
