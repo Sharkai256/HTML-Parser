@@ -39,14 +39,7 @@ class DOM extends Element {
 }
 
 class SingleTag extends Element {
-    ⚠️ get endClosed: boolean // Указывает сериализатору добавлять '/' в конец тега.
+    ✔️ get endClosed: boolean // Указывает сериализатору добавлять '/' в конец тега.
 }
 
-class Comment extends Node {
-    ⚠️ constructor()
-}
-
-class DocumentType extends Node {
-    ⚠️ constructor()
-}
 ```
