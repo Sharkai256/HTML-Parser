@@ -1,4 +1,5 @@
 import serialize from './ser'
+import parse from './index'
 
 type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 
@@ -126,6 +127,19 @@ export class Element extends Node {
     set innerText(value) {
         this.textContent = value
     }
+
+    get innerHTML() {
+        return this.childNodes.map((item) => item.toString()).join('');
+    }
+    set innerHTML(value) {
+        for (const item of this.childNodes) {
+            item.remove();
+        }
+        const result = parse(value);
+        for (const item of result.childNodes) {
+            this.appendChild(item)
+        }
+    }
 }
 
 export class SingleTag extends Element {
@@ -192,6 +206,11 @@ export class DOM extends Element {
 
     createElement(tagName: string) {
         return new Element(tagName)
+    }
+
+    createNode(html: string){
+        const result = parse(html);
+        return result.childNodes[0]
     }
 
     get nodeName() {
