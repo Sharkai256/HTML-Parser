@@ -92,7 +92,7 @@ export class Node {
 }
 
 export class Element extends Node {
-    attributes: AttributeMap
+    attributes: AttributeMap // Сделать приватным
 
     constructor(
         name: string,
@@ -129,16 +129,12 @@ export class Element extends Node {
     }
 
     get innerHTML() {
-        return this.childNodes.map((item) => item.toString()).join('');
+        return this.childNodes.map(v => v.toString()).join('')
     }
     set innerHTML(value) {
-        for (const item of this.childNodes) {
-            item.remove();
-        }
-        const result = parse(value);
-        for (const item of result.childNodes) {
-            this.appendChild(item)
-        }
+        this.childNodes.forEach(v => v.remove())
+
+        parse(value).childNodes.forEach(this.appendChild)
     }
 }
 
@@ -208,8 +204,8 @@ export class DOM extends Element {
         return new Element(tagName)
     }
 
-    createNode(html: string){
-        const result = parse(html);
+    createNode(html: string) {
+        const result = parse(html)
         return result.childNodes[0]
     }
 
