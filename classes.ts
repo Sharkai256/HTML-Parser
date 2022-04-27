@@ -92,7 +92,7 @@ export class Node {
 }
 
 export class Element extends Node {
-    attributes: AttributeMap // Сделать приватным
+    #attributes: AttributeMap
 
     constructor(
         name: string,
@@ -100,7 +100,7 @@ export class Element extends Node {
         ...attributes: Attribute[]
     ) {
         super(Node.ELEMENT_NODE, name.toUpperCase(), childNodes)
-        this.attributes = new AttributeMap(...attributes)
+        this.#attributes = new AttributeMap(...attributes)
     }
 
     append(node: Node | string) {
@@ -135,6 +135,17 @@ export class Element extends Node {
         this.childNodes.forEach(v => v.remove())
 
         parse(value).childNodes.forEach(this.appendChild)
+    }
+    
+    get attributes() {
+        return this.#attributes
+    }
+
+    get id() {
+        return this.#attributes.get('id').nodeValue
+    }
+    set id(value: string) {
+        this.#attributes.set(new Attribute('id', value))
     }
 }
 
@@ -301,5 +312,34 @@ export class AttributeMap {
 
     get length() {
         return this.#items.length
+    }
+}
+
+export class TokenList extends Set<string> {
+    get value() {
+        return Array.from(this.values()).join(' ')
+    }
+    set value(value) {
+        const values = value.split(' ')
+        this.clear()
+        for (const val of values) {
+            this.add(val)
+        }
+    }
+    replace(oldToken: string, newToken: string) : boolean {
+        if(this.delete(oldToken)) {
+            this.add(newToken)
+            return true
+        }
+        return false
+    }
+    toggle(token: string, force?: boolean) : boolean {
+        if(typeof force == 'boolean')
+        if(force) return !!this.add(token)
+        else return this.delete(token)
+        
+        if(this.delete(token)) return false
+        this.add(token)
+        return true
     }
 }
