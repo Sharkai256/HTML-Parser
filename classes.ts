@@ -32,16 +32,16 @@ export class Node {
         this.#nodeValue = value
     }
 
-    //! Нода не может существовать в двух местах одновременно.
-    //! div1.appendChild(a); div2.appendChild(a); - выдаст неправильный результат.
     appendChild(node: Node) {
         if (node instanceof Attribute) throw new Error('Attribute can not be appended')
         if (node instanceof DOM) throw new Error('DOM can not be appended')
+        node.remove() 
         this.#childNodes.push(node)
         node.#parentNode = this
     }
 
     remove() {
+        if(!this.#parentNode) return
         const cN = this.#parentNode.#childNodes
         cN.splice(cN.indexOf(this), 1)
         this.#parentNode = null

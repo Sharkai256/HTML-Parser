@@ -16,7 +16,7 @@ class Node {
     ✔️ get parentElement: Element | null // Родительский элемент. Фильтровать ноду.
 
     ✔️ toString: () => string // Сериализует ноду.
-    ⚠️ appendChild: (element: Node) => void // Добавляет новый дочерний элемент. Работает только с Element, для остальных классов выбрасывает ошибку.
+    ✔️ appendChild: (element: Node) => void // Добавляет новый дочерний элемент. Работает только с Element, для остальных классов выбрасывает ошибку.
     ✔️ remove: () => void // Убирает ноду из дерева. Очищает parentNode. Удаляет ноду из childNodes у родительской ноды.
 }
 
