@@ -205,8 +205,7 @@ export class DOM extends Element {
     }
 
     createNode(html: string) {
-        const result = parse(html)
-        return result.childNodes[0]
+        return parse(html).childNodes[0]
     }
 
     get nodeName() {
