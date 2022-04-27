@@ -1,4 +1,5 @@
 import serialize from './ser'
+import parse from './index'
 
 type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 
@@ -91,7 +92,7 @@ export class Node {
 }
 
 export class Element extends Node {
-    attributes: AttributeMap
+    attributes: AttributeMap // Сделать приватным
 
     constructor(
         name: string,
@@ -125,6 +126,15 @@ export class Element extends Node {
     }
     set innerText(value) {
         this.textContent = value
+    }
+
+    get innerHTML() {
+        return this.childNodes.map(v => v.toString()).join('')
+    }
+    set innerHTML(value) {
+        this.childNodes.forEach(v => v.remove())
+
+        parse(value).childNodes.forEach(this.appendChild)
     }
 }
 
@@ -192,6 +202,10 @@ export class DOM extends Element {
 
     createElement(tagName: string) {
         return new Element(tagName)
+    }
+
+    createNode(html: string) {
+        return parse(html).childNodes[0]
     }
 
     get nodeName() {
