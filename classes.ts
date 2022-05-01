@@ -326,49 +326,48 @@ export class AttributeMap {
 
 export class TokenList extends Set<string> {
     #callback : (arr :string[]) => void
+
     constructor(callback : (arr :string[]) => void) {
         super()
         this.#callback = callback
+    }
+
+    replace(oldToken: string, newToken: string): boolean {
+        if (this.delete(oldToken)) return !!this.add(newToken)
+        return false
+    }
+
+    toggle(token: string, force?: boolean): boolean {
+        if (typeof force == 'boolean')
+        if (force) return !!this.add(token)
+        else return this.delete(token)
+
+        if (this.delete(token)) return false
+        return !!this.add(token)
+    }
+
+    add(value: string): this {
+        super.add(value)
+        this.#callback([...this])
+        return this
+    }
+
+    delete(value: string): boolean {
+        const del = super.delete(value)
+        this.#callback([...this])
+        return del
+    }
+
+    clear(): void {
+        super.clear()
+        this.#callback([])
     }
 
     get value() {
         return Array.from(this.values()).join(' ')
     }
     set value(value) {
-        const values = value.split(' ')
         this.clear()
-        for (const val of values) {
-            this.add(val)
-        }
-    }
-    replace(oldToken: string, newToken: string) : boolean {
-        if(this.delete(oldToken)) {
-            this.add(newToken)
-            return true
-        }
-        return false
-    }
-    toggle(token: string, force?: boolean) : boolean {
-        if(typeof force == 'boolean')
-        if(force) return !!this.add(token)
-        else return this.delete(token)
-
-        if(this.delete(token)) return false
-        this.add(token)
-        return true
-    }
-    add(value: string): this {
-        super.add(value)
-        this.#callback(Array.from(this))
-        return this
-    }
-    delete(value: string): boolean {
-        const del = super.delete(value)
-        this.#callback(Array.from(this))
-        return del
-    }
-    clear(): void {
-        super.clear()
-        this.#callback([])
+        value.split(' ').forEach(v => this.add)
     }
 }
