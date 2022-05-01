@@ -33,6 +33,7 @@ export class Node {
         this.#nodeValue = value
     }
 
+    //! Предусмотреть цыкличность дерева. div1 не может быть ребёнком div2, если div2 уже ребёнок div1.
     appendChild(node: Node) {
         if (node instanceof Attribute) throw new Error('Attribute can not be appended')
         if (node instanceof DOM) throw new Error('DOM can not be appended')
@@ -106,6 +107,7 @@ export class Element extends Node {
         })
     }
 
+    //* Теперь мы аппендим не одну ноду, а все переданные. Тут нужен rest.
     append(node: Node | string) {
         if (node instanceof Node) {
             this.appendChild(node)
