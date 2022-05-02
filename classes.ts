@@ -3,6 +3,228 @@ import parse from './index'
 
 type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 
+interface Selector {
+    type: "class" | "id" | "attr" | "pseudo";
+    value: string;
+    sub?: Tag[];
+}
+
+interface Tag {
+    name: string;
+    selectors: Selector[];
+    separ?: " " | ">"| "~" | "+" | ",";
+}
+
+interface AttrSelector{
+    name: string;
+    mod: string;
+    value: string;
+}
+
+interface PseudoSelector{
+    name: string;
+    value?: TagSelector[]
+}
+
+interface TagSelector{
+    name: string
+    id: string
+    class: string[]
+    attributes: AttrSelector[]
+    pseudo: PseudoSelector[]
+    separ?: " " | ">"| "~" | "+" | ",";
+}
+
+const parseSelector = (selector: string) => {
+
+    const parse = (string: string) => {
+    
+        const SELECTOR = 0;
+        const CLASS = 1;
+        const ID = 2;
+        const ATTRIBUTE = 3;
+        const PSEUDO = 4;
+        const SUB = 5;
+        const SPEC = 6;
+        const SEP = 7;
+    
+        const tags: Tag[] = [{
+            name: "",
+            selectors: []
+        }];
+        
+        let buffer = '';
+        let counter = 0;
+    
+        const lastTag = () => tags[tags.length-1];
+        const lastSel = () => lastTag().selectors[lastTag().selectors.length-1];
+        
+        const checkForSpec = (char: string, callback: () => void) => {
+            switch(char){
+                case ',':       
+                case ' ':
+                case '>':
+                case '~':
+                case '+':
+                    if(state !== SEP){
+                        buffer = '';
+                        tags.push({
+                            name: "",
+                            selectors: []
+                        })
+                    }
+                    buffer += char;
+                    if(!/^ *[,>~\+]? *$/.test(buffer)) throw new Error(`Invalid separator [${char}] in [${buffer}]`)
+                    lastTag().separ = <' '>(buffer.trim() || " ")
+                    state = SEP;
+                    break;
+                case '.':
+                    state = CLASS;
+                    lastTag().selectors.push({
+                        type:"class",
+                        value:""
+                    })
+                    break;
+                case '#':
+                    state = ID;
+                    lastTag().selectors.push({
+                        type:"id",
+                        value:""
+                    })
+                    break;
+                case '[':
+                    state = ATTRIBUTE;
+                    lastTag().selectors.push({
+                        type:"attr",
+                        value:""
+                    })
+                    break;
+                case ']':
+                    break;
+                case ':':
+                    state = PSEUDO;
+                    lastTag().selectors.push({
+                        type:"pseudo",
+                        value:""
+                    })
+                    break;
+                default:
+                    callback();
+                    break;
+            }
+        }
+        
+        let state = SELECTOR;
+        
+        for (const char of string) {
+            switch(state){
+                case SPEC:
+                    checkForSpec(char, () => {throw new Error(`Invalid character after "()" [${char}]`)})
+                    break;
+                case SEP:
+                    let flag = true;
+                    checkForSpec(char, () => {
+                        state = SELECTOR;
+                        flag = false;
+                    })
+                    if(flag) break;
+                case SELECTOR:
+                    if(char == '*') lastTag().name = '*';
+                    else checkForSpec(char, () => {
+                        if(!/^[a-z-]+$/.test(char)) throw new Error(`Invalid character in tag name [${char}]`)
+                        lastTag().name += char;
+                    });
+                    break;
+                case PSEUDO:
+                    if(char == '('){
+                        state = SUB;
+                        buffer = '';
+                        counter = 1;
+                        break;
+                    }
+                case CLASS:
+                case ID:
+                    checkForSpec(char, () => {
+                        if(!/^[a-z-]+$/.test(char)) throw new Error(`Invalid character [${char}]`)
+                        lastSel().value += char
+                    } );
+                    break;
+                case ATTRIBUTE:
+                    checkForSpec(char, () => {
+                        lastSel().value += char;
+                        if(!/^[a-z-]+([\^\$\*]?(=.*?)?)?$/.test(lastSel().value)) throw new Error(`Invalid character in attribute name [${char}]`)
+                    } );
+                    break;
+                case SUB:
+                    if(char == '(') counter++;
+                    if(char == ')'){
+                        counter--;
+                        if(!counter){
+                            state = SPEC;
+                            lastSel().sub = parse(buffer);
+                            break;
+                        }
+                    }
+                    buffer += char;
+                    break;
+            }
+        }
+        return tags;
+    }
+    
+    const res = parse(selector);
+    if(!res.length) return null;
+
+    const checkName = (name:string, err:string) => {
+        if(!/^[a-z]+(-[a-z]+)*$/.test(name)) throw new Error(err);
+    }
+    
+    const transform = (array: Tag[]): TagSelector[] => {
+        if(!array?.length) return null
+        const selectors = [];
+        for (const item of array) {
+            const tag: TagSelector = {
+                name: item.name || '*',
+                id: '',
+                class: [],
+                attributes: [],
+                pseudo: [],
+                separ: item.separ
+            }
+            for (const sel of item.selectors) {
+                switch(sel.type){
+                    case 'attr':
+                        let [,name,mod,value] = /^([a-z]+(?:-[a-z]+)*)(?:([\^\$\*]?)=((?:".*")|(?:'.*')|(?:\S+)))?$/.exec(sel.value) ?? ['', ''];
+                        if(!name) throw new Error(`Invalid attribute selector [${sel.value}]`)
+                        if(/^(".*")|('.*')$/.test(value)) value = value.substring(1, value.length-1);
+                        tag.attributes.push({name, mod, value});
+                        break;
+                    case 'class':
+                        checkName(sel.value, `Invalid class selector [${sel.value}]`)
+                        tag.class.push(sel.value)
+                        break;
+                    case 'id':
+                        checkName(sel.value, `Invalid id selector [${sel.value}]`)
+                        if(tag.id) throw new Error(`Two id occurences in selector  [${tag.id}]`);
+                        tag.id = sel.value;
+                        break;
+                    case 'pseudo':
+                        checkName(sel.value, `Invalid pseudo class selector [${sel.value}]`)
+                        tag.pseudo.push({
+                            name: sel.value,
+                            value: transform(sel.sub),
+                        })
+                        break;
+                }
+            }
+            tag.id = tag.id || '*'
+            selectors.push(tag)
+        }
+        return selectors;
+    }
+
+    return transform(res)
+}
 export class Node {
     static get ELEMENT_NODE(): 1 { return 1 }
     static get ATTRIBUTE_NODE(): 2 { return 2 }
@@ -178,7 +400,7 @@ export class Element extends Node {
     }
 
     get id() {
-        return this.#attributes.get('id').nodeValue
+        return this.#attributes.get('id')?.nodeValue
     }
     set id(value: string) {
         this.#attributes.set(new Attribute('id', value))
