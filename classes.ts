@@ -366,15 +366,11 @@ export class Element extends Node {
             else this.appendChild(n instanceof Node ? n : new Text(n))    
         }
     }
-
-    remove(node: Node) {
-        Node.removeChild(node)
-    }
     
     before(...node: (Node | string)[]) {
         if(!this.parentElement) throw new Error('Parent element does not exist') 
         for (const n of node) {
-            this.parentNode.insertBefore(n, this)
+            this.parentNode.insertBefore(n instanceof Node ? n : new Text(n), this)
         }
     }
 
@@ -382,7 +378,7 @@ export class Element extends Node {
         if(!this.parentElement) throw new Error('Parent element does not exist')
         const nextNode = this.parentElement.childNodes[this.parentElement.childNodes.indexOf(this) +1] 
         for (const n of node) {
-            this.parentNode.insertBefore(n, nextNode)
+            this.parentNode.insertBefore(n instanceof Node ? n : new Text(n), nextNode)
         }
     }
 
