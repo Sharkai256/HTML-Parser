@@ -371,6 +371,22 @@ export class Element extends Node {
         Node.removeChild(node)
     }
     
+    before(...node: (Node | string)[]) {
+        if(!this.parentElement) throw new Error('Parent element does not exist') 
+        for (const n of node) {
+            this.parentNode.insertBefore(n, this)
+        }
+    }
+
+    after(...node: (Node | string)[]) {
+        if(!this.parentElement) throw new Error('Parent element does not exist')
+        const nextNode = this.parentElement.childNodes[this.parentElement.childNodes.indexOf(this) +1] 
+        for (const n of node) {
+            this.parentNode.insertBefore(n, nextNode)
+        }
+    }
+
+
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
     }
