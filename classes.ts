@@ -33,13 +33,31 @@ export class Node {
         this.#nodeValue = value
     }
 
-    //! Предусмотреть цыкличность дерева. div1 не может быть ребёнком div2, если div2 уже ребёнок div1.
     appendChild(node: Node) {
         if (node instanceof Attribute) throw new Error('Attribute can not be appended')
         if (node instanceof DOM) throw new Error('DOM can not be appended')
+        if (node.contains(this)) throw new Error('Child node can not contain parent node')
         node.remove()
         this.#childNodes.push(node)
         node.#parentNode = this
+    }
+
+    insertBefore(newNode: Node, referenceNode: Node) {
+        this.#childNodes.splice(this.#childNodes.indexOf(referenceNode), 0, newNode)
+    }
+
+    removeChild(node: Node) {
+        if (node == undefined) throw new Error('Node is undefined') 
+        if (node.parentNode != this) throw new Error('This node is not a child of the current node')
+        node.remove()
+        return node
+    }
+
+    replaceChild(newChild: Node, oldChild: Node) {
+        if (oldChild.parentElement != this) throw new Error('OldChild is not a child of this element')
+        if (newChild.contains(this)) throw new Error('Child node can not contain parent node')
+        this.insertBefore(newChild, oldChild) 
+        oldChild.remove()  
     }
 
     remove() {
@@ -47,6 +65,12 @@ export class Node {
         const cN = this.#parentNode.#childNodes
         cN.splice(cN.indexOf(this), 1)
         this.#parentNode = null
+    }
+
+    contains(node: Node) {
+        if (node.parentNode == this) return true
+        else if(!node.parentNode) return false
+        return this.contains(node.parentNode)
     }
 
     toString() {
@@ -107,21 +131,28 @@ export class Element extends Node {
         })
     }
 
-    //* Теперь мы аппендим не одну ноду, а все переданные. Тут нужен rest.
-    append(node: Node | string) {
-        if (node instanceof Node) {
-            this.appendChild(node)
+    append(...node: (Node | string)[]) {
+        for (const n of node) {
+            this.appendChild(n instanceof Node ? n : new Text(n))  
         }
-        else {
-            this.appendChild(new Text(node))
-        }
-        this.appendChild(node instanceof Node ? node : new Text(node))
     }
 
+    prepend(...node: (Node | string)[]) {
+        for (const n of node) {
+            const firstNode = this.childNodes[0]
+            if(firstNode) this.insertBefore(n instanceof Node ? n : new Text(n), firstNode)  
+            else this.appendChild(n instanceof Node ? n : new Text(n))    
+        }
+    }
+
+    remove(node: Node) {
+        Node.removeChild(node)
+    }
+    
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
     }
-
+    
     get tagName() {
         return this.nodeName
     }
@@ -155,6 +186,13 @@ export class Element extends Node {
 
     get classList() {
         return this.#classList
+    }
+
+    get className() {
+        return this.classList.value
+    }
+    set className(value) {
+        this.classList.value = value
     }
 }
 
