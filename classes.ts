@@ -255,10 +255,11 @@ export class Node {
         this.#nodeValue = value
     }
 
+    //! Предусмотреть цыкличность дерева. div1 не может быть ребёнком div2, если div2 уже ребёнок div1.
     appendChild(node: Node) {
         if (node instanceof Attribute) throw new Error('Attribute can not be appended')
         if (node instanceof DOM) throw new Error('DOM can not be appended')
-        node.remove() 
+        node.remove()
         this.#childNodes.push(node)
         node.#parentNode = this
     }
@@ -315,7 +316,7 @@ export class Node {
 
 export class Element extends Node {
     #attributes: AttributeMap
-
+    #classList: TokenList
     constructor(
         name: string,
         childNodes: Node[] = [],
@@ -323,8 +324,12 @@ export class Element extends Node {
     ) {
         super(Node.ELEMENT_NODE, name.toUpperCase(), childNodes)
         this.#attributes = new AttributeMap(...attributes)
+        this.#classList = new TokenList(arr => {
+            this.#attributes.set(new Attribute('class', arr.join(' ')))
+        })
     }
 
+    //* Теперь мы аппендим не одну ноду, а все переданные. Тут нужен rest.
     append(node: Node | string) {
         if (node instanceof Node) {
             this.appendChild(node)
@@ -358,7 +363,7 @@ export class Element extends Node {
 
         parse(value).childNodes.forEach(this.appendChild)
     }
-    
+
     get attributes() {
         return this.#attributes
     }
@@ -368,6 +373,10 @@ export class Element extends Node {
     }
     set id(value: string) {
         this.#attributes.set(new Attribute('id', value))
+    }
+
+    get classList() {
+        return this.#classList
     }
 }
 
@@ -512,7 +521,7 @@ export class AttributeMap {
         if (typeof found == 'number') {
             this.#items[found] = attr
         } else {
-            this.#itemsMap[attr.name] = this.#items.push(attr)
+            this.#itemsMap[attr.name] = this.#items.push(attr) - 1
         }
     }
 
@@ -538,30 +547,49 @@ export class AttributeMap {
 }
 
 export class TokenList extends Set<string> {
+    #callback : (arr :string[]) => void
+
+    constructor(callback : (arr :string[]) => void) {
+        super()
+        this.#callback = callback
+    }
+
+    replace(oldToken: string, newToken: string): boolean {
+        if (this.delete(oldToken)) return !!this.add(newToken)
+        return false
+    }
+
+    toggle(token: string, force?: boolean): boolean {
+        if (typeof force == 'boolean')
+        if (force) return !!this.add(token)
+        else return this.delete(token)
+
+        if (this.delete(token)) return false
+        return !!this.add(token)
+    }
+
+    add(value: string): this {
+        super.add(value)
+        this.#callback([...this])
+        return this
+    }
+
+    delete(value: string): boolean {
+        const del = super.delete(value)
+        this.#callback([...this])
+        return del
+    }
+
+    clear(): void {
+        super.clear()
+        this.#callback([])
+    }
+
     get value() {
         return Array.from(this.values()).join(' ')
     }
     set value(value) {
-        const values = value.split(' ')
         this.clear()
-        for (const val of values) {
-            this.add(val)
-        }
-    }
-    replace(oldToken: string, newToken: string) : boolean {
-        if(this.delete(oldToken)) {
-            this.add(newToken)
-            return true
-        }
-        return false
-    }
-    toggle(token: string, force?: boolean) : boolean {
-        if(typeof force == 'boolean')
-        if(force) return !!this.add(token)
-        else return this.delete(token)
-        
-        if(this.delete(token)) return false
-        this.add(token)
-        return true
+        value.split(' ').forEach(v => this.add)
     }
 }
