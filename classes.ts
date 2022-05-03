@@ -262,13 +262,15 @@ export class Node {
         node.#parentNode = this
     }
 
+    //* Позволяет дублировать ноды.
+    //* Позволяет циклит дерево.
+    //* Позволяет аппендить ноды, которые аппендить нельзя.
     insertBefore(newNode: Node, referenceNode: Node) {
         this.#childNodes.splice(this.#childNodes.indexOf(referenceNode), 0, newNode)
     }
 
     removeChild(node: Node) {
-        if (node == undefined) throw new Error('Node is undefined')
-        if (node.parentNode != this) throw new Error('This node is not a child of the current node')
+        if (node.parentNode != this) throw new Error('Passed node is not a child of the current node')
         node.remove()
         return node
     }
@@ -358,6 +360,7 @@ export class Element extends Node {
         }
     }
 
+    //! Добавляет ноды в обратном порядке.
     prepend(...node: (Node | string)[]) {
         for (const n of node) {
             const firstNode = this.childNodes[0]
@@ -639,6 +642,10 @@ export class TokenList extends Set<string> {
     }
     set value(value) {
         this.clear()
-        value.split(' ').forEach(this.add)
+        value.split(' ').forEach(v => this.add(v))
+    }
+
+    get [Symbol.toStringTag]() {
+        return 'TokenList'
     }
 }
