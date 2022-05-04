@@ -17,7 +17,7 @@ interface Tag {
 
 interface AttrSelector{
     name: string;
-    mod: string;
+    mod: "^" | "$" | "*";
     value: string;
 }
 
@@ -131,7 +131,7 @@ const parseSelector = (selector: string) => {
                 case SELECTOR:
                     if(char == '*') lastTag().name = '*';
                     else checkForSpec(char, () => {
-                        if(!/^[a-z-]+$/.test(char)) throw new Error(`Invalid character in tag name [${char}]`)
+                        if(!/^[0-z-]+$/.test(char)) throw new Error(`Invalid character in tag name [${char}]`)
                         lastTag().name += char;
                     });
                     break;
@@ -197,7 +197,7 @@ const parseSelector = (selector: string) => {
                         let [,name,mod,value] = /^([a-z]+(?:-[a-z]+)*)(?:([\^\$\*]?)=((?:".*")|(?:'.*')|(?:\S+)))?$/.exec(sel.value) ?? ['', ''];
                         if(!name) throw new Error(`Invalid attribute selector [${sel.value}]`)
                         if(/^(".*")|('.*')$/.test(value)) value = value.substring(1, value.length-1);
-                        tag.attributes.push({name, mod, value});
+                        tag.attributes.push({name, mod:<'*'>mod, value});
                         break;
                     case 'class':
                         checkName(sel.value, `Invalid class selector [${sel.value}]`)
@@ -339,7 +339,133 @@ export class Element extends Node {
         }
         this.appendChild(node instanceof Node ? node : new Text(node))
     }
-    
+
+    querySelector(selector: string) {
+
+        const equals = (array1: string[], array2: string[]) => {
+            if (!array2)
+                return false;
+            if (array1.length != array2.length)
+                return false;
+            for (var i = 0, l=array1.length; i < l; i++) {          
+                if (array1[i] != array2[i]) { 
+                    return false;
+                }       
+            } 
+            return true;
+        }
+
+        const filter = parseSelector(selector);
+        if(!filter) return null;
+        let flag = true;
+        if(this.tagName !== filter[0].name.toUpperCase()) flag = false;
+        if(this.id !== filter[0].id) flag = false;
+        if(!equals([...this.#classList], filter[0].class)) flag = false;
+        label1: for (const obj of filter[0].attributes) {
+            const attr = this.#attributes.get(obj.name)
+            if(!attr){
+                flag = false;
+                break;
+            }    
+            if(typeof obj.value !== "string" && !attr){
+                flag = false;
+                break;
+            }
+            switch(obj.mod){
+                case '$':
+                    if(!attr.value.endsWith(obj.value)){
+                        flag = false;
+                        break label1;
+                    }
+                    break;
+                case '*':
+                    if(!attr.value.includes(obj.value)){
+                        flag = false;
+                        break label1;
+                    }
+                    break;
+                case '^':
+                    if(!attr.value.startsWith(obj.value)){
+                        flag = false;
+                        break label1;
+                    }
+                    break;
+                default:
+                    if(attr.value !== obj.value){
+                        flag = false;
+                        break label1;
+                    }
+                    break;
+            }
+        }
+        //TODO pseudo classes
+        for (const pseudo of filter[0].pseudo) {
+            switch(pseudo.name){
+                case 'first-child':
+                    if(this.parentElement.children[0] !== this){
+                        flag = false;
+                        break;
+                    } 
+                    break;
+                case 'last-child':
+                    if(this.parentElement.children[this.parentElement.children.length-1] !== this){
+                        flag = false;
+                        break;
+                    }
+                    break;
+                case 'nth-child':
+                    if(this.parentElement.children.indexOf()){
+                        flag = false;
+                        break;
+                    }
+                    break;
+                case 'nth-last-child':
+                    if(this.parentElement.children.reverse()[this.parentElement.children.reverse().indexOf(pseudo.value)] !== this){
+                        flag = false;
+                        break;
+                    }
+                    break;
+                case 'only-child':
+                    if(this.parentElement.children[0] !== this || this.parentElement.children.length !== 1){
+                        flag = false;
+                        break;
+                    } 
+                    break;
+                case 'first-of-type':
+                    if ( [...new Set(this.parentElement.children) ] [0] !== this ) {
+                        flag = false;
+                        break;
+                    } 
+                    break;
+                case 'last-of-type':
+                    if ( [...new Set(this.parentElement.children) ].reverse() [0] !== this ) {
+                        flag = false;
+                        break;
+                    } 
+                    break;
+                case 'nth-of-type':
+                    if ( [...new Set(this.parentElement.children) ] [ [...new Set(this.parentElement.children) ] .indexOf(pseudo.value)] !== this ) {
+                        flag = false;
+                        break;
+                    } 
+                    break;
+                case 'nth-last-of-type':
+                    if ( [...new Set(this.parentElement.children) ].reverse() [ [...new Set(this.parentElement.children) ] .indexOf(pseudo.value)] !== this ) {
+                        flag = false;
+                        break;
+                    } 
+                    break;
+                case 'only-of-type':
+                    break;
+                case 'not':
+                    break;
+                default:
+                    break;
+            }
+        }
+        return null;
+    }
+
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
     }
