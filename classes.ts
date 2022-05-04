@@ -276,7 +276,7 @@ export class Node {
     }
 
     replaceChild(newChild: Node, oldChild: Node) {
-        if (oldChild.parentElement != this) throw new Error('OldChild is not a child of this element')
+        if (oldChild.parentNode != this) throw new Error('OldChild is not a child of this element')
         if (newChild.contains(this)) throw new Error('Child node can not contain parent node')
         this.insertBefore(newChild, oldChild)
         oldChild.remove()
@@ -326,7 +326,7 @@ export class Node {
         return this.#parentNode
     }
 
-    get parentElement() {
+    get parentElement(): Element {
         return (this.#parentNode instanceof Element ? this.#parentNode : null)
     }
 
