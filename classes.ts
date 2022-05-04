@@ -4,7 +4,7 @@ import parse from './index'
 type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 
 interface Selector {
-    type: "class" | "id" | "attr" | "pseudo";
+    type: 'class' | 'id' | 'attr' | 'pseudo';
     value: string;
     sub?: Tag[];
 }
@@ -12,33 +12,31 @@ interface Selector {
 interface Tag {
     name: string;
     selectors: Selector[];
-    separ?: " " | ">"| "~" | "+" | ",";
+    separ?: ' ' | '>' | '~' | '+' | ',';
 }
 
-interface AttrSelector{
+interface AttrSelector {
     name: string;
     mod: "^" | "$" | "*";
     value: string;
 }
 
-interface PseudoSelector{
+interface PseudoSelector {
     name: string;
     value?: TagSelector[]
 }
 
-interface TagSelector{
+interface TagSelector {
     name: string
     id: string
     class: string[]
     attributes: AttrSelector[]
     pseudo: PseudoSelector[]
-    separ?: " " | ">"| "~" | "+" | ",";
+    separ?: ' ' | '>' | '~' | '+' | ',';
 }
 
 const parseSelector = (selector: string) => {
-
     const parse = (string: string) => {
-    
         const SELECTOR = 0;
         const CLASS = 1;
         const ID = 2;
@@ -47,56 +45,56 @@ const parseSelector = (selector: string) => {
         const SUB = 5;
         const SPEC = 6;
         const SEP = 7;
-    
+
         const tags: Tag[] = [{
-            name: "",
+            name: '',
             selectors: []
         }];
-        
+
         let buffer = '';
         let counter = 0;
-    
-        const lastTag = () => tags[tags.length-1];
-        const lastSel = () => lastTag().selectors[lastTag().selectors.length-1];
-        
+
+        const lastTag = () => tags[tags.length - 1];
+        const lastSel = () => lastTag().selectors[lastTag().selectors.length - 1];
+
         const checkForSpec = (char: string, callback: () => void) => {
-            switch(char){
-                case ',':       
+            switch (char) {
+                case ',':
                 case ' ':
                 case '>':
                 case '~':
                 case '+':
-                    if(state !== SEP){
+                    if (state !== SEP) {
                         buffer = '';
                         tags.push({
-                            name: "",
+                            name: '',
                             selectors: []
                         })
                     }
                     buffer += char;
-                    if(!/^ *[,>~\+]? *$/.test(buffer)) throw new Error(`Invalid separator [${char}] in [${buffer}]`)
-                    lastTag().separ = <' '>(buffer.trim() || " ")
+                    if (!/^ *[,>~\+]? *$/.test(buffer)) throw new Error(`Invalid separator [${char}] in [${buffer}]`)
+                    lastTag().separ = <' '>buffer.trim() || ' '
                     state = SEP;
                     break;
                 case '.':
                     state = CLASS;
                     lastTag().selectors.push({
-                        type:"class",
-                        value:""
+                        type: 'class',
+                        value: ''
                     })
                     break;
                 case '#':
                     state = ID;
                     lastTag().selectors.push({
-                        type:"id",
-                        value:""
+                        type: 'id',
+                        value: ''
                     })
                     break;
                 case '[':
                     state = ATTRIBUTE;
                     lastTag().selectors.push({
-                        type:"attr",
-                        value:""
+                        type: 'attr',
+                        value: ''
                     })
                     break;
                 case ']':
@@ -104,8 +102,8 @@ const parseSelector = (selector: string) => {
                 case ':':
                     state = PSEUDO;
                     lastTag().selectors.push({
-                        type:"pseudo",
-                        value:""
+                        type: 'pseudo',
+                        value: ''
                     })
                     break;
                 default:
@@ -113,11 +111,11 @@ const parseSelector = (selector: string) => {
                     break;
             }
         }
-        
+
         let state = SELECTOR;
-        
+
         for (const char of string) {
-            switch(state){
+            switch (state) {
                 case SPEC:
                     checkForSpec(char, () => {throw new Error(`Invalid character after "()" [${char}]`)})
                     break;
@@ -127,16 +125,16 @@ const parseSelector = (selector: string) => {
                         state = SELECTOR;
                         flag = false;
                     })
-                    if(flag) break;
+                    if (flag) break;
                 case SELECTOR:
-                    if(char == '*') lastTag().name = '*';
+                    if (char == '*') lastTag().name = '*';
                     else checkForSpec(char, () => {
-                        if(!/^[0-z-]+$/.test(char)) throw new Error(`Invalid character in tag name [${char}]`)
+                        if (!/^[a-z-]+$/.test(char)) throw new Error(`Invalid character in tag name [${char}]`)
                         lastTag().name += char;
                     });
                     break;
                 case PSEUDO:
-                    if(char == '('){
+                    if (char == '(') {
                         state = SUB;
                         buffer = '';
                         counter = 1;
@@ -145,21 +143,21 @@ const parseSelector = (selector: string) => {
                 case CLASS:
                 case ID:
                     checkForSpec(char, () => {
-                        if(!/^[a-z-]+$/.test(char)) throw new Error(`Invalid character [${char}]`)
+                        if (!/^[a-z-]+$/.test(char)) throw new Error(`Invalid character [${char}]`)
                         lastSel().value += char
-                    } );
+                    });
                     break;
                 case ATTRIBUTE:
                     checkForSpec(char, () => {
                         lastSel().value += char;
-                        if(!/^[a-z-]+([\^\$\*]?(=.*?)?)?$/.test(lastSel().value)) throw new Error(`Invalid character in attribute name [${char}]`)
-                    } );
+                        if (!/^[a-z-]+([\^\$\*]?(=.*?)?)?$/.test(lastSel().value)) throw new Error(`Invalid character in attribute name [${char}]`)
+                    });
                     break;
                 case SUB:
-                    if(char == '(') counter++;
-                    if(char == ')'){
+                    if (char == '(') counter++;
+                    if (char == ')') {
                         counter--;
-                        if(!counter){
+                        if (!counter) {
                             state = SPEC;
                             lastSel().sub = parse(buffer);
                             break;
@@ -171,16 +169,16 @@ const parseSelector = (selector: string) => {
         }
         return tags;
     }
-    
-    const res = parse(selector);
-    if(!res.length) return null;
 
-    const checkName = (name:string, err:string) => {
-        if(!/^[a-z]+(-[a-z]+)*$/.test(name)) throw new Error(err);
+    const res = parse(selector);
+    if (!res.length) return null;
+
+    const checkName = (name: string, err: string) => {
+        if (!/^[a-z]+(-[a-z]+)*$/.test(name)) throw new Error(err);
     }
-    
+
     const transform = (array: Tag[]): TagSelector[] => {
-        if(!array?.length) return null
+        if (!array?.length) return null
         const selectors = [];
         for (const item of array) {
             const tag: TagSelector = {
@@ -192,11 +190,11 @@ const parseSelector = (selector: string) => {
                 separ: item.separ
             }
             for (const sel of item.selectors) {
-                switch(sel.type){
+                switch (sel.type) {
                     case 'attr':
-                        let [,name,mod,value] = /^([a-z]+(?:-[a-z]+)*)(?:([\^\$\*]?)=((?:".*")|(?:'.*')|(?:\S+)))?$/.exec(sel.value) ?? ['', ''];
-                        if(!name) throw new Error(`Invalid attribute selector [${sel.value}]`)
-                        if(/^(".*")|('.*')$/.test(value)) value = value.substring(1, value.length-1);
+                        let [, name, mod, value] = /^([a-z]+(?:-[a-z]+)*)(?:([\^\$\*]?)=((?:".*")|(?:'.*')|(?:\S+)))?$/.exec(sel.value) ?? ['', ''];
+                        if (!name) throw new Error(`Invalid attribute selector [${sel.value}]`)
+                        if (/^(".*")|('.*')$/.test(value)) value = value.substring(1, value.length - 1);
                         tag.attributes.push({name, mod:<'*'>mod, value});
                         break;
                     case 'class':
@@ -205,14 +203,14 @@ const parseSelector = (selector: string) => {
                         break;
                     case 'id':
                         checkName(sel.value, `Invalid id selector [${sel.value}]`)
-                        if(tag.id) throw new Error(`Two id occurences in selector  [${tag.id}]`);
+                        if (tag.id) throw new Error(`Two id occurences in selector  [${tag.id}]`);
                         tag.id = sel.value;
                         break;
                     case 'pseudo':
                         checkName(sel.value, `Invalid pseudo class selector [${sel.value}]`)
                         tag.pseudo.push({
                             name: sel.value,
-                            value: transform(sel.sub),
+                            value: transform(sel.sub)
                         })
                         break;
                 }
@@ -222,9 +220,9 @@ const parseSelector = (selector: string) => {
         }
         return selectors;
     }
-
     return transform(res)
 }
+
 export class Node {
     static get ELEMENT_NODE(): 1 { return 1 }
     static get ATTRIBUTE_NODE(): 2 { return 2 }
@@ -255,13 +253,33 @@ export class Node {
         this.#nodeValue = value
     }
 
-    //! Предусмотреть цыкличность дерева. div1 не может быть ребёнком div2, если div2 уже ребёнок div1.
     appendChild(node: Node) {
         if (node instanceof Attribute) throw new Error('Attribute can not be appended')
         if (node instanceof DOM) throw new Error('DOM can not be appended')
+        if (node.contains(this)) throw new Error('Child node can not contain parent node')
         node.remove()
         this.#childNodes.push(node)
         node.#parentNode = this
+    }
+
+    //* Позволяет дублировать ноды.
+    //* Позволяет циклит дерево.
+    //* Позволяет аппендить ноды, которые аппендить нельзя.
+    insertBefore(newNode: Node, referenceNode: Node) {
+        this.#childNodes.splice(this.#childNodes.indexOf(referenceNode), 0, newNode)
+    }
+
+    removeChild(node: Node) {
+        if (node.parentNode != this) throw new Error('Passed node is not a child of the current node')
+        node.remove()
+        return node
+    }
+
+    replaceChild(newChild: Node, oldChild: Node) {
+        if (oldChild.parentElement != this) throw new Error('OldChild is not a child of this element')
+        if (newChild.contains(this)) throw new Error('Child node can not contain parent node')
+        this.insertBefore(newChild, oldChild)
+        oldChild.remove()
     }
 
     remove() {
@@ -269,6 +287,12 @@ export class Node {
         const cN = this.#parentNode.#childNodes
         cN.splice(cN.indexOf(this), 1)
         this.#parentNode = null
+    }
+
+    contains(node: Node) {
+        if (node.parentNode == this) return true
+        else if(!node.parentNode) return false
+        return this.contains(node.parentNode)
     }
 
     toString() {
@@ -317,6 +341,7 @@ export class Node {
 export class Element extends Node {
     #attributes: AttributeMap
     #classList: TokenList
+
     constructor(
         name: string,
         childNodes: Node[] = [],
@@ -329,15 +354,10 @@ export class Element extends Node {
         })
     }
 
-    //* Теперь мы аппендим не одну ноду, а все переданные. Тут нужен rest.
-    append(node: Node | string) {
-        if (node instanceof Node) {
-            this.appendChild(node)
+    append(...node: (Node | string)[]) {
+        for (const n of node) {
+            this.appendChild(n instanceof Node ? n : new Text(n))
         }
-        else {
-            this.appendChild(new Text(node))
-        }
-        this.appendChild(node instanceof Node ? node : new Text(node))
     }
 
     querySelector(selector: string) {
@@ -465,6 +485,31 @@ export class Element extends Node {
         }
         return null;
     }
+    
+    //! Добавляет ноды в обратном порядке.
+    prepend(...node: (Node | string)[]) {
+        for (const n of node) {
+            const firstNode = this.childNodes[0]
+            const child = n instanceof Node ? n : new Text(n)
+            if (firstNode) this.insertBefore(child, firstNode)
+            else this.appendChild(child)
+        }
+    }
+
+    before(...node: (Node | string)[]) {
+        if (!this.parentElement) throw new Error('Parent element does not exist')
+        for (const n of node) {
+            this.parentNode.insertBefore(n instanceof Node ? n : new Text(n), this)
+        }
+    }
+
+    after(...node: (Node | string)[]) {
+        if (!this.parentElement) throw new Error('Parent element does not exist')
+        const nextNode = this.parentElement.childNodes[this.parentElement.childNodes.indexOf(this) +1]
+        for (const n of node) {
+            this.parentNode.insertBefore(n instanceof Node ? n : new Text(n), nextNode)
+        }
+    }
 
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
@@ -503,6 +548,13 @@ export class Element extends Node {
 
     get classList() {
         return this.#classList
+    }
+
+    get className() {
+        return this.classList.value
+    }
+    set className(value) {
+        this.classList.value = value
     }
 }
 
@@ -673,9 +725,9 @@ export class AttributeMap {
 }
 
 export class TokenList extends Set<string> {
-    #callback : (arr :string[]) => void
+    #callback: (arr :string[]) => void
 
-    constructor(callback : (arr :string[]) => void) {
+    constructor(callback: (arr: string[]) => void) {
         super()
         this.#callback = callback
     }
@@ -716,6 +768,10 @@ export class TokenList extends Set<string> {
     }
     set value(value) {
         this.clear()
-        value.split(' ').forEach(v => this.add)
+        value.split(' ').forEach(v => this.add(v))
+    }
+
+    get [Symbol.toStringTag]() {
+        return 'TokenList'
     }
 }
