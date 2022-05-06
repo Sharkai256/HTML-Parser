@@ -472,7 +472,6 @@ export class Element extends Node {
         return null;
     }
     
-    //! Добавляет ноды в обратном порядке.
     prepend(...node: (Node | string)[]) {
         const firstNode = this.childNodes[0]
         for (const n of node) {
@@ -767,9 +766,17 @@ export class StringMap implements Map<string, string> {
 
     constructor(callback: (arr: [string, string][]) => void) {
         return new Proxy(this, {
-            // get(target, key) {
-            //     return target._map.get(key.toString())
-            //}
+            get(target, key) {
+                return target._map.get(key.toString())
+            },
+            set(target, key, value) {
+                target._map.set(key.toString(), value)        
+                return true
+            },
+            ownKeys(target) {
+                return [...target._map.keys()]
+            }
+
         })
     }
     
