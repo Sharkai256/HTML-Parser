@@ -6,7 +6,7 @@ type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 interface Selector {
     type: 'class' | 'id' | 'attr' | 'pseudo';
     value: string;
-    sub?: Tag[];
+    sub?: string;
 }
 
 interface Tag {
@@ -23,7 +23,7 @@ interface AttrSelector {
 
 interface PseudoSelector {
     name: string;
-    value?: TagSelector[]
+    value?: string
 }
 
 interface TagSelector {
@@ -159,7 +159,7 @@ const parseSelector = (selector: string) => {
                         counter--;
                         if (!counter) {
                             state = SPEC;
-                            lastSel().sub = parse(buffer);
+                            lastSel().sub = buffer;
                             break;
                         }
                     }
@@ -210,7 +210,7 @@ const parseSelector = (selector: string) => {
                         checkName(sel.value, `Invalid pseudo class selector [${sel.value}]`)
                         tag.pseudo.push({
                             name: sel.value,
-                            value: transform(sel.sub)
+                            value: sel.sub
                         })
                         break;
                 }
@@ -430,52 +430,29 @@ export class Element extends Node {
                     } 
                     break;
                 case 'last-child':
-                    if(this.parentElement.children[this.parentElement.children.length-1] !== this){
+                    if(this.parentElement.children[this.parentElement.children.length - 1] !== this){
                         flag = false;
                         break;
                     }
                     break;
                 case 'nth-child':
-                    if(this.parentElement.children.indexOf()){
-                        flag = false;
-                        break;
-                    }
+                    // const index = this.parentElement.children.indexOf(this) + 1;
+                    // if (index % pseudo.value == 0) {
+                    //     flag = false;
+                    //     break;
+                    // }
                     break;
                 case 'nth-last-child':
-                    if(this.parentElement.children.reverse()[this.parentElement.children.reverse().indexOf(pseudo.value)] !== this){
-                        flag = false;
-                        break;
-                    }
                     break;
                 case 'only-child':
-                    if(this.parentElement.children[0] !== this || this.parentElement.children.length !== 1){
-                        flag = false;
-                        break;
-                    } 
                     break;
                 case 'first-of-type':
-                    if ( [...new Set(this.parentElement.children) ] [0] !== this ) {
-                        flag = false;
-                        break;
-                    } 
                     break;
                 case 'last-of-type':
-                    if ( [...new Set(this.parentElement.children) ].reverse() [0] !== this ) {
-                        flag = false;
-                        break;
-                    } 
                     break;
                 case 'nth-of-type':
-                    if ( [...new Set(this.parentElement.children) ] [ [...new Set(this.parentElement.children) ] .indexOf(pseudo.value)] !== this ) {
-                        flag = false;
-                        break;
-                    } 
                     break;
                 case 'nth-last-of-type':
-                    if ( [...new Set(this.parentElement.children) ].reverse() [ [...new Set(this.parentElement.children) ] .indexOf(pseudo.value)] !== this ) {
-                        flag = false;
-                        break;
-                    } 
                     break;
                 case 'only-of-type':
                     break;
