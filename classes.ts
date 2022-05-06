@@ -262,10 +262,12 @@ export class Node {
         node.#parentNode = this
     }
 
-    //* Позволяет дублировать ноды.
-    //* Позволяет циклит дерево.
-    //* Позволяет аппендить ноды, которые аппендить нельзя.
     insertBefore(newNode: Node, referenceNode: Node) {
+        if (newNode.contains(this)) throw new Error('Child node can not contain parent node')
+        if (newNode instanceof Attribute) throw new Error('Attribute can not be inserted')
+        if (newNode instanceof DOM) throw new Error('DOM can not be inserted')
+        newNode.remove()
+        newNode.#parentNode = this
         this.#childNodes.splice(this.#childNodes.indexOf(referenceNode), 0, newNode)
     }
 
@@ -465,14 +467,14 @@ export class Element extends Node {
     
     //! Добавляет ноды в обратном порядке.
     prepend(...node: (Node | string)[]) {
+        const firstNode = this.childNodes[0]
         for (const n of node) {
-            const firstNode = this.childNodes[0]
             const child = n instanceof Node ? n : new Text(n)
             if (firstNode) this.insertBefore(child, firstNode)
             else this.appendChild(child)
         }
     }
-
+  
     before(...node: (Node | string)[]) {
         if (!this.parentElement) throw new Error('Parent element does not exist')
         for (const n of node) {
@@ -750,5 +752,67 @@ export class TokenList extends Set<string> {
 
     get [Symbol.toStringTag]() {
         return 'TokenList'
+    }
+}
+
+export class StringMap implements Map<string, string> {
+    private _map = new Map<string, string>()
+
+    constructor(callback: (arr: [string, string][]) => void) {
+        return new Proxy(this, {
+            // get(target, key) {
+            //     return target._map.get(key.toString())
+            //}
+        })
+    }
+    
+    clear(): void {
+        this._map.clear()
+    }
+
+    delete(key: string): boolean {
+        return this._map.delete(key)
+    }
+
+    entries(): IterableIterator<[string, string]> {
+        return this._map.entries()
+    }
+
+    forEach(callbackfn: (value: string, key: string, map: Map<string, string>) => void, thisArg?: any): void {
+        return this._map.forEach(callbackfn, thisArg)
+    }
+
+    get(key: string): string {
+        return this._map.get(key)
+    }
+
+    has(key: string): boolean {
+        return this._map.has(key)
+    }
+
+    keys(): IterableIterator<string> {
+        return this._map.keys()
+    }
+
+    set(key: string, value: string): this {
+        this._map.set(key, value)
+        return this
+    }
+
+    
+    values(): IterableIterator<string> {
+        return this._map.values()
+    }
+
+    get size() {
+        return this._map.size
+    }
+
+    get [Symbol.iterator]() {
+        return () => this.entries()
+    }
+
+    get [Symbol.toStringTag]() {
+        return 'StringMap'
     }
 }
