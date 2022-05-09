@@ -515,6 +515,16 @@ export class Element extends Node {
         }
     }
 
+    replaceWith(...node: (Node | string)[]) {
+        if(!node.length) return this.remove()
+        let nod = node.pop()
+        nod = nod instanceof Node ? nod : new Text(nod)
+        this.parentElement.replaceChild(nod, this)
+        for (const n of node) {
+            nod.parentNode.insertBefore(n instanceof Node ? n : new Text(n), nod)
+        }
+    }
+
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
     }
