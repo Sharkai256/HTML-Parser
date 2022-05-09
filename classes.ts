@@ -6,7 +6,7 @@ type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 interface Selector {
     type: 'class' | 'id' | 'attr' | 'pseudo';
     value: string;
-    sub?: Tag[];
+    sub?: string;
 }
 
 interface Tag {
@@ -23,7 +23,7 @@ interface AttrSelector {
 
 interface PseudoSelector {
     name: string;
-    value?: TagSelector[]
+    value?: string
 }
 
 interface TagSelector {
@@ -159,7 +159,7 @@ const parseSelector = (selector: string) => {
                         counter--;
                         if (!counter) {
                             state = SPEC;
-                            lastSel().sub = parse(buffer);
+                            lastSel().sub = buffer;
                             break;
                         }
                     }
@@ -210,7 +210,7 @@ const parseSelector = (selector: string) => {
                         checkName(sel.value, `Invalid pseudo class selector [${sel.value}]`)
                         tag.pseudo.push({
                             name: sel.value,
-                            value: transform(sel.sub)
+                            value: sel.sub
                         })
                         break;
                 }
@@ -262,10 +262,12 @@ export class Node {
         node.#parentNode = this
     }
 
-    //* Позволяет дублировать ноды.
-    //* Позволяет циклит дерево.
-    //* Позволяет аппендить ноды, которые аппендить нельзя.
     insertBefore(newNode: Node, referenceNode: Node) {
+        if (newNode.contains(this)) throw new Error('Child node can not contain parent node')
+        if (newNode instanceof Attribute) throw new Error('Attribute can not be inserted')
+        if (newNode instanceof DOM) throw new Error('DOM can not be inserted')
+        newNode.remove()
+        newNode.#parentNode = this
         this.#childNodes.splice(this.#childNodes.indexOf(referenceNode), 0, newNode)
     }
 
@@ -418,84 +420,67 @@ export class Element extends Node {
                     break;
             }
         }
-        //TODO pseudo classes
+        /*
         for (const pseudo of filter[0].pseudo) {
             switch(pseudo.name){
                 case 'first-child':
-                    if(this.parentElement.children[0] !== this){
+                    if (this.parentElement.children[0] !== this) {
                         flag = false;
                         break;
                     } 
                     break;
                 case 'last-child':
-                    if(this.parentElement.children[this.parentElement.children.length-1] !== this){
+                    if (this.parentElement.children[this.parentElement.children.length - 1] !== this) {
                         flag = false;
                         break;
                     }
                     break;
-                case 'nth-child':
-                    if(this.parentElement.children.indexOf()){
-                        flag = false;
-                        break;
-                    }
-                    break;
-                case 'nth-last-child':
-                    if(this.parentElement.children.reverse()[this.parentElement.children.reverse().indexOf(pseudo.value)] !== this){
-                        flag = false;
-                        break;
-                    }
-                    break;
+                // I'm not gonna do math OMEGALUL
+                // case 'nth-child':
+                //      const index = this.parentElement.children.indexOf(this) + 1;
+                //      if (index % pseudo.value == 0) {
+                //          flag = false;
+                //          break;
+                //      }
+                //     break;
+                // case 'nth-last-child':
+                //     break;
+                // case 'nth-of-type':
+                //     break;
+                // case 'nth-last-of-type':
+                //     break;
                 case 'only-child':
-                    if(this.parentElement.children[0] !== this || this.parentElement.children.length !== 1){
+                    if (this.parentElement.children[0] !== this && this.parentElement.children.length !== 1) {
                         flag = false;
                         break;
-                    } 
+                    }
                     break;
-                case 'first-of-type':
-                    if ( [...new Set(this.parentElement.children) ] [0] !== this ) {
-                        flag = false;
-                        break;
-                    } 
-                    break;
-                case 'last-of-type':
-                    if ( [...new Set(this.parentElement.children) ].reverse() [0] !== this ) {
-                        flag = false;
-                        break;
-                    } 
-                    break;
-                case 'nth-of-type':
-                    if ( [...new Set(this.parentElement.children) ] [ [...new Set(this.parentElement.children) ] .indexOf(pseudo.value)] !== this ) {
-                        flag = false;
-                        break;
-                    } 
-                    break;
-                case 'nth-last-of-type':
-                    if ( [...new Set(this.parentElement.children) ].reverse() [ [...new Set(this.parentElement.children) ] .indexOf(pseudo.value)] !== this ) {
-                        flag = false;
-                        break;
-                    } 
-                    break;
-                case 'only-of-type':
-                    break;
-                case 'not':
-                    break;
+                // I'll add this functionallity later, not promise
+                // case 'first-of-type':
+                //     break;
+                // case 'last-of-type':
+                //     break;
+                // case 'only-of-type':
+                //     break;
+                // case 'not':
+                //     break;
                 default:
                     break;
             }
         }
+        */
         return null;
     }
     
-    //! Добавляет ноды в обратном порядке.
     prepend(...node: (Node | string)[]) {
+        const firstNode = this.childNodes[0]
         for (const n of node) {
-            const firstNode = this.childNodes[0]
             const child = n instanceof Node ? n : new Text(n)
             if (firstNode) this.insertBefore(child, firstNode)
             else this.appendChild(child)
         }
     }
-
+  
     before(...node: (Node | string)[]) {
         if (!this.parentElement) throw new Error('Parent element does not exist')
         for (const n of node) {
@@ -763,5 +748,75 @@ export class TokenList extends Set<string> {
 
     get [Symbol.toStringTag]() {
         return 'TokenList'
+    }
+}
+
+export class StringMap implements Map<string, string> {
+    private _map = new Map<string, string>()
+
+    constructor(callback: (arr: [string, string][]) => void) {
+        return new Proxy(this, {
+            get(target, key) {
+                return target._map.get(key.toString())
+            },
+            set(target, key, value) {
+                target._map.set(key.toString(), value)        
+                return true
+            },
+            ownKeys(target) {
+                return [...target._map.keys()]
+            }
+
+        })
+    }
+    
+    clear(): void {
+        this._map.clear()
+    }
+
+    delete(key: string): boolean {
+        return this._map.delete(key)
+    }
+
+    entries(): IterableIterator<[string, string]> {
+        return this._map.entries()
+    }
+
+    forEach(callbackfn: (value: string, key: string, map: Map<string, string>) => void, thisArg?: any): void {
+        return this._map.forEach(callbackfn, thisArg)
+    }
+
+    get(key: string): string {
+        return this._map.get(key)
+    }
+
+    has(key: string): boolean {
+        return this._map.has(key)
+    }
+
+    keys(): IterableIterator<string> {
+        return this._map.keys()
+    }
+
+    set(key: string, value: string): this {
+        this._map.set(key, value)
+        return this
+    }
+
+    
+    values(): IterableIterator<string> {
+        return this._map.values()
+    }
+
+    get size() {
+        return this._map.size
+    }
+
+    get [Symbol.iterator]() {
+        return () => this.entries()
+    }
+
+    get [Symbol.toStringTag]() {
+        return 'StringMap'
     }
 }
