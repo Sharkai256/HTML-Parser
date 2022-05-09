@@ -685,8 +685,7 @@ export class Attribute extends Node {
 }
 
 export class AttributeMap {
-    #items: Attribute[] = []
-    #itemsMap: {[name: string]: number} = {}
+    #itemsMap: {[name: string]: Attribute} = {}
 
     constructor(...attributes: Attribute[]) {
         for (const attr of attributes) {
@@ -695,32 +694,23 @@ export class AttributeMap {
     }
 
     set(attr: Attribute) {
-        const found = this.#itemsMap[attr.name]
-        if (typeof found == 'number') {
-            this.#items[found] = attr
-        } else {
-            this.#itemsMap[attr.name] = this.#items.push(attr) - 1
-        }
+        this.#itemsMap[attr.name] = attr
     }
 
     get(name: string) {
-        return this.#items[this.#itemsMap[name]]
+        return this.#itemsMap[name]
     }
 
     remove(name: string) {
-        const found = this.#itemsMap[name]
-        if (typeof found == 'number') {
-            this.#items.splice(found, 1)
-            delete this.#itemsMap[name]
-        }
+        delete this.#itemsMap[name]
     }
 
     item(index: number) {
-        return this.#items[index]
+        return Object.values(this.#itemsMap)[index]
     }
 
     get length() {
-        return this.#items.length
+        return Object.values(this.#itemsMap).length
     }
 }
 
