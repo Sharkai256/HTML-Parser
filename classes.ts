@@ -343,6 +343,8 @@ export class Node {
 export class Element extends Node {
     #attributes: AttributeMap
     #classList: TokenList
+    #style: StringMap
+    #dataset: StringMap
 
     constructor(
         name: string,
@@ -353,6 +355,23 @@ export class Element extends Node {
         this.#attributes = new AttributeMap(...attributes)
         this.#classList = new TokenList(arr => {
             this.#attributes.set(new Attribute('class', arr.join(' ')))
+        })
+        this.#style = new StringMap(arr => {
+            this.#attributes.set(new Attribute('style', arr.map(v => v[0].replace(/[A-Z]/g, m => '-' + m.toLowerCase()) + ':' + v[1]).join(';')))
+        })
+        this.#dataset = new StringMap((arr, state, keys, val) => {
+            switch (state) {
+                case 'clear':
+                    for (const key of keys) {
+                        this.#attributes.remove('data-' + key.replace(/[A-Z]/g, m => '-' + m.toLowerCase()))    
+                    } 
+                    break
+                case 'delete':
+                    this.#attributes.remove('data-' + keys[0].replace(/[A-Z]/g, m => '-' + m.toLowerCase()))
+                    break
+                case 'set':
+                    this.#attributes.set(new Attribute('data-' + keys[0].replace(/[A-Z]/g, m => '-' + m.toLowerCase()), val))
+            }
         })
     }
 
@@ -534,6 +553,14 @@ export class Element extends Node {
     set className(value) {
         this.classList.value = value
     }
+
+    get style() {
+        return this.#style
+    }
+
+    get dataset() {
+        return this.#dataset
+    }
 }
 
 export class SingleTag extends Element {
@@ -703,7 +730,7 @@ export class AttributeMap {
 }
 
 export class TokenList extends Set<string> {
-    #callback: (arr :string[]) => void
+    #callback: (arr: string[]) => void
 
     constructor(callback: (arr: string[]) => void) {
         super()
@@ -755,30 +782,31 @@ export class TokenList extends Set<string> {
 }
 
 export class StringMap implements Map<string, string> {
+    [key: string | symbol]: any
+
+    private _callback: (arr: [string, string][], state: 'set' | 'clear' | 'delete', key?: string[], val?: string) => void
     private _map = new Map<string, string>()
 
-    constructor(callback: (arr: [string, string][]) => void) {
+    constructor(callback: (arr: [string, string][], state: 'set' | 'clear' | 'delete', key?: string[], val?: string) => void) {
+        this._callback = callback
         return new Proxy(this, {
-            get(target, key) {
-                return target._map.get(key.toString())
-            },
-            set(target, key, value) {
-                target._map.set(key.toString(), value)        
-                return true
-            },
-            ownKeys(target) {
-                return [...target._map.keys()]
-            }
-
+            get: (target, key) => target[key] ?? target.get(key.toString()),
+            set: (target, key, value) => !!target.set(key.toString(), value),
+            ownKeys: (target) => [...target.keys()]
         })
     }
     
     clear(): void {
+        const keys = [...this.keys()]
         this._map.clear()
+        this._callback([...this], 'clear', keys)
+        return 
     }
 
     delete(key: string): boolean {
-        return this._map.delete(key)
+        const del = this._map.delete(key)
+        this._callback([...this], 'delete', [key])
+        return del
     }
 
     entries(): IterableIterator<[string, string]> {
@@ -803,10 +831,10 @@ export class StringMap implements Map<string, string> {
 
     set(key: string, value: string): this {
         this._map.set(key, value)
+        this._callback([...this], 'set', [key], value)
         return this
     }
 
-    
     values(): IterableIterator<string> {
         return this._map.values()
     }

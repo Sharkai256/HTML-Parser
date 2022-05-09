@@ -42,8 +42,8 @@ class Element extends Node {
     ✔️ get | set id: string // Аттрибут id.
     ✔️ get classList: TokenList // Аттрибут class.
     ✔️ get | set className: string // Алиас на Element.classList.value.
-    🚧 get style: StringMap // Аттрибут style.
-    🚧 get dataset: StringMap // Аттрибуты data-*.
+    ✔️ get style: StringMap // Аттрибут style.
+    ✔️ get dataset: StringMap // Аттрибуты data-*.
 
     ✔️ append: (...node: (Node | string)[]) => void // Если node является объектом типа Element, то выполняет appendChild. Если нет - сериализует и добавляет как текстовую ноду.
     ✔️ prepend: (...node: (Node | string)[]) => void // Делает то же самое что и append, только ноды добавляются в начало списка.
@@ -92,7 +92,7 @@ class TokenList extends Set<string> {
 class StringMap implements Map<string, string> {
     ✔️ private _map: Map<string, string>() // Хранит пары ключ-значение.
 
-    🚧 constructor: (callback: (([string, string])[]) => void) => new Proxy(/* ... */) // Прокси должен перехватывать ивенты get, set, ownKeys и подставлять на их место пары из _map.
+    ✔️ constructor: (callback: (([string, string])[]) => void) => new Proxy(/* ... */) // Прокси должен перехватывать ивенты get, set, ownKeys и подставлять на их место пары из _map.
 
     ✔️ get [Symbol.iterator]: () => this.entries()
     ✔️ get [Symbol.toStringTag]: 'StringMap'
