@@ -439,48 +439,55 @@ export class Element extends Node {
                     break;
             }
         }
-        //TODO pseudo classes
+        /*
         for (const pseudo of filter[0].pseudo) {
             switch(pseudo.name){
                 case 'first-child':
-                    if(this.parentElement.children[0] !== this){
+                    if (this.parentElement.children[0] !== this) {
                         flag = false;
                         break;
                     } 
                     break;
                 case 'last-child':
-                    if(this.parentElement.children[this.parentElement.children.length - 1] !== this){
+                    if (this.parentElement.children[this.parentElement.children.length - 1] !== this) {
                         flag = false;
                         break;
                     }
                     break;
-                case 'nth-child':
-                    // const index = this.parentElement.children.indexOf(this) + 1;
-                    // if (index % pseudo.value == 0) {
-                    //     flag = false;
-                    //     break;
-                    // }
-                    break;
-                case 'nth-last-child':
-                    break;
+                // I'm not gonna do math OMEGALUL
+                // case 'nth-child':
+                //      const index = this.parentElement.children.indexOf(this) + 1;
+                //      if (index % pseudo.value == 0) {
+                //          flag = false;
+                //          break;
+                //      }
+                //     break;
+                // case 'nth-last-child':
+                //     break;
+                // case 'nth-of-type':
+                //     break;
+                // case 'nth-last-of-type':
+                //     break;
                 case 'only-child':
+                    if (this.parentElement.children[0] !== this && this.parentElement.children.length !== 1) {
+                        flag = false;
+                        break;
+                    }
                     break;
-                case 'first-of-type':
-                    break;
-                case 'last-of-type':
-                    break;
-                case 'nth-of-type':
-                    break;
-                case 'nth-last-of-type':
-                    break;
-                case 'only-of-type':
-                    break;
-                case 'not':
-                    break;
+                // I'll add this functionallity later, not promise
+                // case 'first-of-type':
+                //     break;
+                // case 'last-of-type':
+                //     break;
+                // case 'only-of-type':
+                //     break;
+                // case 'not':
+                //     break;
                 default:
                     break;
             }
         }
+        */
         return null;
     }
     
@@ -690,8 +697,7 @@ export class Attribute extends Node {
 }
 
 export class AttributeMap {
-    #items: Attribute[] = []
-    #itemsMap: {[name: string]: number} = {}
+    #itemsMap: {[name: string]: Attribute} = {}
 
     constructor(...attributes: Attribute[]) {
         for (const attr of attributes) {
@@ -700,32 +706,23 @@ export class AttributeMap {
     }
 
     set(attr: Attribute) {
-        const found = this.#itemsMap[attr.name]
-        if (typeof found == 'number') {
-            this.#items[found] = attr
-        } else {
-            this.#itemsMap[attr.name] = this.#items.push(attr) - 1
-        }
+        this.#itemsMap[attr.name] = attr
     }
 
     get(name: string) {
-        return this.#items[this.#itemsMap[name]]
+        return this.#itemsMap[name]
     }
 
     remove(name: string) {
-        const found = this.#itemsMap[name]
-        if (typeof found == 'number') {
-            this.#items.splice(found, 1)
-            delete this.#itemsMap[name]
-        }
+        delete this.#itemsMap[name]
     }
 
     item(index: number) {
-        return this.#items[index]
+        return Object.values(this.#itemsMap)[index]
     }
 
     get length() {
-        return this.#items.length
+        return Object.values(this.#itemsMap).length
     }
 }
 
