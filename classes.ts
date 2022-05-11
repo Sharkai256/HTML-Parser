@@ -396,49 +396,8 @@ export class Element extends Node {
             return true;
         }
 
-        const filter = parseSelector(selector);
+        let filter = parseSelector(selector);
         if(!filter) return null;
-        let flag = true;
-        if(this.tagName !== filter[0].name.toUpperCase()) flag = false;
-        if(this.id !== filter[0].id) flag = false;
-        if(!equals([...this.#classList], filter[0].class)) flag = false;
-        label1: for (const obj of filter[0].attributes) {
-            const attr = this.#attributes.get(obj.name)
-            if(!attr){
-                flag = false;
-                break;
-            }    
-            if(typeof obj.value !== "string" && !attr){
-                flag = false;
-                break;
-            }
-            switch(obj.mod){
-                case '$':
-                    if(!attr.value.endsWith(obj.value)){
-                        flag = false;
-                        break label1;
-                    }
-                    break;
-                case '*':
-                    if(!attr.value.includes(obj.value)){
-                        flag = false;
-                        break label1;
-                    }
-                    break;
-                case '^':
-                    if(!attr.value.startsWith(obj.value)){
-                        flag = false;
-                        break label1;
-                    }
-                    break;
-                default:
-                    if(attr.value !== obj.value){
-                        flag = false;
-                        break label1;
-                    }
-                    break;
-            }
-        }
         /*
         for (const pseudo of filter[0].pseudo) {
             switch(pseudo.name){
@@ -488,7 +447,48 @@ export class Element extends Node {
             }
         }
         */
-        return null;
+
+        const check = (iter: Element, filter: TagSelector) => {
+            if (filter.name !== '*' || iter.tagName !== filter[0].name.toUpperCase()) return false;
+            if (filter.id !== '*' || iter.id !== filter[0].id) return false;
+            if (!equals([...iter.#classList], filter[0].class)) return false;
+            label1: for (const obj of filter[0].attributes) {
+                const attr = iter.#attributes.get(obj.name)
+                if (!attr) return false;    
+                if (typeof obj.value !== "string" && !attr) return false;
+                switch (obj.mod) {
+                    case '$':
+                        if (!attr.value.endsWith(obj.value)) return false;
+                    case '*':
+                        if (!attr.value.includes(obj.value)) return false;
+                    case '^':
+                        if (!attr.value.startsWith(obj.value)) return false;
+                    default:
+                        if (attr.value !== obj.value) return false;
+                }
+            }
+            return true;
+        }
+
+        filter = filter.reverse();
+        const recSearch = (currElem: Element) => {
+            if(check(currElem, filter[0])) {
+                let iter = currElem;
+                for (let i=1; i < filter.length; i++) {
+                    iter = iter.parentElement;
+                    if (!iter || !check(iter, filter[i])) {
+                        iter = null;
+                        break;
+                    }
+                }
+                //TODO QUERYSELECTORALL MOMENT
+                if(iter) return currElem;
+            }
+            for (const child of currElem.children) {
+                recSearch(child);
+            }
+        }
+        return recSearch(this)
     }
     
     prepend(...node: (Node | string)[]) {
