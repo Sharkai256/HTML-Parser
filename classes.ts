@@ -522,8 +522,33 @@ export class Element extends Node {
         this.parentElement.replaceChild(nod, this)
         for (const n of node) {
             nod.parentNode.insertBefore(n instanceof Node ? n : new Text(n), nod)
-        }
+        }    
     }
+
+    setAttribute(name: string, value: string) {
+        this.#attributes.set(new Attribute(name, value))
+    }
+
+    getAttribute(name: string) {
+        return this.#attributes.get(name)?.value
+    }
+
+    removeAttribute(name: string) {
+        this.#attributes.remove(name)
+    }
+
+    toggleAttribute(name: string, force?: boolean) {
+        if (typeof force == 'boolean')
+        if (force) this.setAttribute(name, '')
+        else this.removeAttribute(name)
+
+        else if (this.hasAttribute(name)) this.removeAttribute(name)
+        else this.setAttribute(name, '')
+    }
+
+    hasAttribute(name: string) {
+        return !!this.#attributes.get(name)
+    } 
 
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
@@ -656,6 +681,18 @@ export class DOM extends Element {
 
     get nodeType() {
         return Node.DOCUMENT_NODE
+    }
+
+    get doctype() {
+        for (const node of this.childNodes) {
+            if (node instanceof DocumentType) return node
+        }
+    }
+    
+    get documentElement() {
+        for (const elem of this.children) {
+            if (this.tagName == 'HTML') return elem
+        }
     }
 }
 
