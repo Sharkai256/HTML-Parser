@@ -223,6 +223,118 @@ const parseSelector = (selector: string) => {
     return transform(res)
 }
 
+function querySelector(selector: string, moreThanOne: boolean = false) {
+    
+    const equals = (array1: string[], array2: string[]) => {
+        if (!array2)
+            return false;
+        if (array1.length != array2.length)
+            return false;
+        for (var i = 0, l=array1.length; i < l; i++) {          
+            if (array1[i] != array2[i]) { 
+                return false;
+            }       
+        } 
+        return true;
+    }
+
+    let filter = parseSelector(selector);
+    if(!filter) return null;
+    /*
+    for (const pseudo of filter[0].pseudo) {
+        switch(pseudo.name){
+            case 'first-child':
+                if (this.parentElement.children[0] !== this) {
+                    flag = false;
+                    break;
+                } 
+                break;
+            case 'last-child':
+                if (this.parentElement.children[this.parentElement.children.length - 1] !== this) {
+                    flag = false;
+                    break;
+                }
+                break;
+            // I'm not gonna do math OMEGALUL
+            // case 'nth-child':
+            //      const index = this.parentElement.children.indexOf(this) + 1;
+            //      if (index % pseudo.value == 0) {
+            //          flag = false;
+            //          break;
+            //      }
+            //     break;
+            // case 'nth-last-child':
+            //     break;
+            // case 'nth-of-type':
+            //     break;
+            // case 'nth-last-of-type':
+            //     break;
+            case 'only-child':
+                if (this.parentElement.children[0] !== this && this.parentElement.children.length !== 1) {
+                    flag = false;
+                    break;
+                }
+                break;
+            // I'll add this functionallity later, not promise
+            // case 'first-of-type':
+            //     break;
+            // case 'last-of-type':
+            //     break;
+            // case 'only-of-type':
+            //     break;
+            // case 'not':
+            //     break;
+            default:
+                break;
+        }
+    }
+    */
+
+    const check = (iter: Element, filter: TagSelector) => {
+        if (filter.name !== '*' && iter.tagName !== filter.name.toUpperCase()) return false;
+        if (filter.id !== '*' && iter.id !== filter.id) return false;
+        if (!equals([...iter.classList], filter.class)) return false;
+        label1: for (const obj of filter.attributes) {
+            const attr = iter.attributes.get(obj.name)
+            if (!attr) return false;    
+            if (typeof obj.value !== "string" && !attr) return false;
+            switch (obj.mod) {
+                case '$':
+                    if (!attr.value.endsWith(obj.value)) return false;
+                case '*':
+                    if (!attr.value.includes(obj.value)) return false;
+                case '^':
+                    if (!attr.value.startsWith(obj.value)) return false;
+                default:
+                    if (attr.value !== obj.value) return false;
+            }
+        }
+        return true;
+    }
+
+    let resArr: Element[] = [];
+    filter = filter.reverse();
+    const recSearch = (currElem: Element): Element => {
+        if(check(currElem, filter[0])) {
+            let iter = currElem;
+            for (let i=1; i < filter.length; i++) {
+                iter = iter.parentElement;
+                if (!iter || !check(iter, filter[i])) {
+                    iter = null;
+                    break;
+                }
+            }
+            if(iter) resArr.push(iter);
+        }
+        for (const child of currElem.children) {
+            if (!moreThanOne && resArr.length > 0) return;
+            recSearch(child);
+        }
+    }
+    recSearch(this);
+    return resArr;
+}
+
 export class Node {
     static get ELEMENT_NODE(): 1 { return 1 }
     static get ATTRIBUTE_NODE(): 2 { return 2 }
@@ -381,114 +493,12 @@ export class Element extends Node {
         }
     }
 
-    querySelector(selector: string) {
+    querySelector(selector: string): Element {
+        return querySelector.call(this, selector, false)?.[0]
+    }
 
-        const equals = (array1: string[], array2: string[]) => {
-            if (!array2)
-                return false;
-            if (array1.length != array2.length)
-                return false;
-            for (var i = 0, l=array1.length; i < l; i++) {          
-                if (array1[i] != array2[i]) { 
-                    return false;
-                }       
-            } 
-            return true;
-        }
-
-        let filter = parseSelector(selector);
-        if(!filter) return null;
-        /*
-        for (const pseudo of filter[0].pseudo) {
-            switch(pseudo.name){
-                case 'first-child':
-                    if (this.parentElement.children[0] !== this) {
-                        flag = false;
-                        break;
-                    } 
-                    break;
-                case 'last-child':
-                    if (this.parentElement.children[this.parentElement.children.length - 1] !== this) {
-                        flag = false;
-                        break;
-                    }
-                    break;
-                // I'm not gonna do math OMEGALUL
-                // case 'nth-child':
-                //      const index = this.parentElement.children.indexOf(this) + 1;
-                //      if (index % pseudo.value == 0) {
-                //          flag = false;
-                //          break;
-                //      }
-                //     break;
-                // case 'nth-last-child':
-                //     break;
-                // case 'nth-of-type':
-                //     break;
-                // case 'nth-last-of-type':
-                //     break;
-                case 'only-child':
-                    if (this.parentElement.children[0] !== this && this.parentElement.children.length !== 1) {
-                        flag = false;
-                        break;
-                    }
-                    break;
-                // I'll add this functionallity later, not promise
-                // case 'first-of-type':
-                //     break;
-                // case 'last-of-type':
-                //     break;
-                // case 'only-of-type':
-                //     break;
-                // case 'not':
-                //     break;
-                default:
-                    break;
-            }
-        }
-        */
-
-        const check = (iter: Element, filter: TagSelector) => {
-            if (filter.name !== '*' || iter.tagName !== filter[0].name.toUpperCase()) return false;
-            if (filter.id !== '*' || iter.id !== filter[0].id) return false;
-            if (!equals([...iter.#classList], filter[0].class)) return false;
-            label1: for (const obj of filter[0].attributes) {
-                const attr = iter.#attributes.get(obj.name)
-                if (!attr) return false;    
-                if (typeof obj.value !== "string" && !attr) return false;
-                switch (obj.mod) {
-                    case '$':
-                        if (!attr.value.endsWith(obj.value)) return false;
-                    case '*':
-                        if (!attr.value.includes(obj.value)) return false;
-                    case '^':
-                        if (!attr.value.startsWith(obj.value)) return false;
-                    default:
-                        if (attr.value !== obj.value) return false;
-                }
-            }
-            return true;
-        }
-
-        filter = filter.reverse();
-        const recSearch = (currElem: Element) => {
-            if(check(currElem, filter[0])) {
-                let iter = currElem;
-                for (let i=1; i < filter.length; i++) {
-                    iter = iter.parentElement;
-                    if (!iter || !check(iter, filter[i])) {
-                        iter = null;
-                        break;
-                    }
-                }
-                //TODO QUERYSELECTORALL MOMENT
-                if(iter) return currElem;
-            }
-            for (const child of currElem.children) {
-                recSearch(child);
-            }
-        }
-        return recSearch(this)
+    querySelectorAll(selector: string): Element[] {
+        return querySelector.call(this, selector, true)
     }
     
     prepend(...node: (Node | string)[]) {
