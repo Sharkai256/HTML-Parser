@@ -685,6 +685,23 @@ export class DOM extends Element {
         return parse(html).childNodes[0]
     }
 
+    createScript(code: string, defer?: boolean, async?: boolean): Element
+    createScript(options: { code: string, defer?: boolean, async?: boolean }): Element
+    createScript(options: string | { code: string, defer?: boolean, async?: boolean }, defer?: boolean, async?: boolean) {
+        if (typeof options == 'object') {
+            var code = options.code
+            defer = options.defer
+            async = options.async
+        }
+        else code = options
+        const script = new Element('SCRIPT', [
+            new Text(code)
+        ])
+        if (defer) script.setAttribute('defer', '')
+        if (async) script.setAttribute('async', '')
+        return script
+    }
+
     get nodeName() {
         return '#document'
     }
