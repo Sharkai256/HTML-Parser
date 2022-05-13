@@ -679,6 +679,46 @@ export class DOM extends Element {
         return '#document'
     }
 
+    get title() {
+        const head = this.head
+        if (!head) return null
+        for (const child of head.children) {
+            if (child.tagName == 'TITLE') {
+                return child.innerText
+            }
+        }
+        return ''
+    }
+    set title(value) {
+        const head = this.head
+        if (!head) return
+        for (const child of head.children) {
+            if (child.tagName == 'TITLE') {
+                child.innerText = value
+                return
+            }
+        }
+        head.appendChild(new Element('TITLE', [
+            new Text(value)
+        ]))
+    }
+
+    get head() {
+        const html = this.documentElement
+        if (!html) return null
+        for (const child of html.children) {
+            if (child.tagName == 'HEAD') return child
+        }
+    }
+
+    get body() {
+        const html = this.documentElement
+        if (!html) return null
+        for (const child of html.children) {
+            if (child.tagName == 'BODY') return child
+        }
+    }
+
     get nodeType() {
         return Node.DOCUMENT_NODE
     }
@@ -691,11 +731,10 @@ export class DOM extends Element {
     
     get documentElement() {
         for (const elem of this.children) {
-            if (this.tagName == 'HTML') return elem
+            if (elem.tagName == 'HTML') return elem
         }
     }
 }
-
 export class DocumentType extends Node {
     constructor(type: string = 'html') {
         super(Node.DOCUMENT_TYPE_NODE, type)
