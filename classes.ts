@@ -117,7 +117,9 @@ const parseSelector = (selector: string) => {
         for (const char of string) {
             switch (state) {
                 case SPEC:
-                    checkForSpec(char, () => {throw new Error(`Invalid character after "()" [${char}]`)})
+                    checkForSpec(char, () => {
+                        throw new Error(`Invalid character after "()" [${char}]`)
+                    })
                     break;
                 case SEP:
                     let flag = true;
@@ -195,7 +197,7 @@ const parseSelector = (selector: string) => {
                         let [, name, mod, value] = /^([a-z]+(?:-[a-z]+)*)(?:([\^\$\*]?)=((?:".*")|(?:'.*')|(?:\S+)))?$/.exec(sel.value) ?? ['', ''];
                         if (!name) throw new Error(`Invalid attribute selector [${sel.value}]`)
                         if (/^(".*")|('.*')$/.test(value)) value = value.substring(1, value.length - 1);
-                        tag.attributes.push({name, mod:<'*'>mod, value});
+                        tag.attributes.push({name, mod: <'*'>mod, value});
                         break;
                     case 'class':
                         checkName(sel.value, `Invalid class selector [${sel.value}]`)
@@ -224,30 +226,29 @@ const parseSelector = (selector: string) => {
 }
 
 function querySelector(selector: string, moreThanOne: boolean = false) {
-    
     const equals = (array1: string[], array2: string[]) => {
         if (!array2)
             return false;
         if (array1.length != array2.length)
             return false;
-        for (var i = 0, l=array1.length; i < l; i++) {          
-            if (array1[i] != array2[i]) { 
+        for (let i = 0; i < array1.length; i++) {
+            if (array1[i] != array2[i]) {
                 return false;
-            }       
-        } 
+            }
+        }
         return true;
     }
 
     let filter = parseSelector(selector);
-    if(!filter) return null;
+    if (!filter) return null;
     /*
     for (const pseudo of filter[0].pseudo) {
-        switch(pseudo.name){
+        switch(pseudo.name) {
             case 'first-child':
                 if (this.parentElement.children[0] !== this) {
                     flag = false;
                     break;
-                } 
+                }
                 break;
             case 'last-child':
                 if (this.parentElement.children[this.parentElement.children.length - 1] !== this) {
@@ -292,45 +293,57 @@ function querySelector(selector: string, moreThanOne: boolean = false) {
 
     const check = (iter: Element, filter: TagSelector) => {
         if (filter.name !== '*' && iter.tagName !== filter.name.toUpperCase()) return false;
+
         if (filter.id !== '*' && iter.id !== filter.id) return false;
+
         if (!equals([...iter.classList], filter.class)) return false;
+
         label1: for (const obj of filter.attributes) {
             const attr = iter.attributes.get(obj.name)
-            if (!attr) return false;    
+
+            if (!attr) return false;
+
             if (typeof obj.value !== "string" && !attr) return false;
+
             switch (obj.mod) {
                 case '$':
                     if (!attr.value.endsWith(obj.value)) return false;
+
                 case '*':
                     if (!attr.value.includes(obj.value)) return false;
+
                 case '^':
                     if (!attr.value.startsWith(obj.value)) return false;
+
                 default:
                     if (attr.value !== obj.value) return false;
             }
         }
+
         return true;
     }
 
     let resArr: Element[] = [];
     filter = filter.reverse();
+
     const recSearch = (currElem: Element): Element => {
-        if(check(currElem, filter[0])) {
+        if (check(currElem, filter[0])) {
             let iter = currElem;
-            for (let i=1; i < filter.length; i++) {
+            for (let i = 1; i < filter.length; i++) {
                 iter = iter.parentElement;
                 if (!iter || !check(iter, filter[i])) {
                     iter = null;
                     break;
                 }
             }
-            if(iter) resArr.push(iter);
+            if (iter) resArr.push(iter);
         }
         for (const child of currElem.children) {
             if (!moreThanOne && resArr.length > 0) return;
             recSearch(child);
         }
     }
+
     recSearch(this);
     return resArr;
 }
@@ -369,6 +382,7 @@ export class Node {
         if (node instanceof Attribute) throw new Error('Attribute can not be appended')
         if (node instanceof DOM) throw new Error('DOM can not be appended')
         if (node.contains(this)) throw new Error('Child node can not contain parent node')
+
         node.remove()
         this.#childNodes.push(node)
         node.#parentNode = this
@@ -378,6 +392,7 @@ export class Node {
         if (newNode.contains(this)) throw new Error('Child node can not contain parent node')
         if (newNode instanceof Attribute) throw new Error('Attribute can not be inserted')
         if (newNode instanceof DOM) throw new Error('DOM can not be inserted')
+
         newNode.remove()
         newNode.#parentNode = this
         this.#childNodes.splice(this.#childNodes.indexOf(referenceNode), 0, newNode)
@@ -385,6 +400,7 @@ export class Node {
 
     removeChild(node: Node) {
         if (node.parentNode != this) throw new Error('Passed node is not a child of the current node')
+
         node.remove()
         return node
     }
@@ -392,12 +408,14 @@ export class Node {
     replaceChild(newChild: Node, oldChild: Node) {
         if (oldChild.parentNode != this) throw new Error('OldChild is not a child of this element')
         if (newChild.contains(this)) throw new Error('Child node can not contain parent node')
+
         this.insertBefore(newChild, oldChild)
         oldChild.remove()
     }
 
     remove() {
-        if(!this.#parentNode) return
+        if (!this.#parentNode) return
+
         const cN = this.#parentNode.#childNodes
         cN.splice(cN.indexOf(this), 1)
         this.#parentNode = null
@@ -405,7 +423,7 @@ export class Node {
 
     contains(node: Node) {
         if (node.parentNode == this) return true
-        else if(!node.parentNode) return false
+        else if (!node.parentNode) return false
         return this.contains(node.parentNode)
     }
 
@@ -475,8 +493,8 @@ export class Element extends Node {
             switch (state) {
                 case 'clear':
                     for (const key of keys) {
-                        this.#attributes.remove('data-' + key.replace(/[A-Z]/g, m => '-' + m.toLowerCase()))    
-                    } 
+                        this.#attributes.remove('data-' + key.replace(/[A-Z]/g, m => '-' + m.toLowerCase()))
+                    }
                     break
                 case 'delete':
                     this.#attributes.remove('data-' + keys[0].replace(/[A-Z]/g, m => '-' + m.toLowerCase()))
@@ -487,8 +505,8 @@ export class Element extends Node {
         })
     }
 
-    append(...node: (Node | string)[]) {
-        for (const n of node) {
+    append(...nodes: (Node | string)[]) {
+        for (const n of nodes) {
             this.appendChild(n instanceof Node ? n : new Text(n))
         }
     }
@@ -500,39 +518,39 @@ export class Element extends Node {
     querySelectorAll(selector: string): Element[] {
         return querySelector.call(this, selector, true)
     }
-    
-    prepend(...node: (Node | string)[]) {
+
+    prepend(...nodes: (Node | string)[]) {
         const firstNode = this.childNodes[0]
-        for (const n of node) {
+        for (const n of nodes) {
             const child = n instanceof Node ? n : new Text(n)
             if (firstNode) this.insertBefore(child, firstNode)
             else this.appendChild(child)
         }
     }
-  
-    before(...node: (Node | string)[]) {
+
+    before(...nodes: (Node | string)[]) {
         if (!this.parentElement) throw new Error('Parent element does not exist')
-        for (const n of node) {
+        for (const n of nodes) {
             this.parentNode.insertBefore(n instanceof Node ? n : new Text(n), this)
         }
     }
 
-    after(...node: (Node | string)[]) {
+    after(...nodes: (Node | string)[]) {
         if (!this.parentElement) throw new Error('Parent element does not exist')
         const nextNode = this.parentElement.childNodes[this.parentElement.childNodes.indexOf(this) +1]
-        for (const n of node) {
+        for (const n of nodes) {
             this.parentNode.insertBefore(n instanceof Node ? n : new Text(n), nextNode)
         }
     }
 
-    replaceWith(...node: (Node | string)[]) {
-        if(!node.length) return this.remove()
-        let nod = node.pop()
-        nod = nod instanceof Node ? nod : new Text(nod)
-        this.parentElement.replaceChild(nod, this)
-        for (const n of node) {
-            nod.parentNode.insertBefore(n instanceof Node ? n : new Text(n), nod)
-        }    
+    replaceWith(...nodes: (Node | string)[]) {
+        if (!nodes.length) return this.remove()
+        let node = nodes.pop()
+        node = node instanceof Node ? node : new Text(node)
+        this.parentElement.replaceChild(node, this)
+        for (const n of nodes) {
+            node.parentNode.insertBefore(n instanceof Node ? n : new Text(n), node)
+        }
     }
 
     setAttribute(name: string, value: string) {
@@ -558,7 +576,7 @@ export class Element extends Node {
 
     hasAttribute(name: string) {
         return !!this.#attributes.get(name)
-    } 
+    }
 
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
@@ -692,13 +710,15 @@ export class DOM extends Element {
             var code = options.code
             defer = options.defer
             async = options.async
-        }
-        else code = options
+        } else code = options
+
         const script = new Element('SCRIPT', [
             new Text(code)
         ])
+
         if (defer) script.setAttribute('defer', '')
         if (async) script.setAttribute('async', '')
+
         return script
     }
 
@@ -709,22 +729,26 @@ export class DOM extends Element {
     get title() {
         const head = this.head
         if (!head) return null
+
         for (const child of head.children) {
             if (child.tagName == 'TITLE') {
                 return child.innerText
             }
         }
+
         return ''
     }
     set title(value) {
         const head = this.head
         if (!head) return
+
         for (const child of head.children) {
             if (child.tagName == 'TITLE') {
                 child.innerText = value
                 return
             }
         }
+
         head.appendChild(new Element('TITLE', [
             new Text(value)
         ]))
@@ -733,6 +757,7 @@ export class DOM extends Element {
     get head() {
         const html = this.documentElement
         if (!html) return null
+
         for (const child of html.children) {
             if (child.tagName == 'HEAD') return child
         }
@@ -741,6 +766,7 @@ export class DOM extends Element {
     get body() {
         const html = this.documentElement
         if (!html) return null
+
         for (const child of html.children) {
             if (child.tagName == 'BODY') return child
         }
@@ -755,7 +781,7 @@ export class DOM extends Element {
             if (node instanceof DocumentType) return node
         }
     }
-    
+
     get documentElement() {
         for (const elem of this.children) {
             if (elem.tagName == 'HTML') return elem
@@ -847,12 +873,12 @@ export class TokenList extends Set<string> {
         this.#callback = callback
     }
 
-    replace(oldToken: string, newToken: string): boolean {
+    replace(oldToken: string, newToken: string) {
         if (this.delete(oldToken)) return !!this.add(newToken)
         return false
     }
 
-    toggle(token: string, force?: boolean): boolean {
+    toggle(token: string, force?: boolean) {
         if (typeof force == 'boolean')
         if (force) return !!this.add(token)
         else return this.delete(token)
@@ -861,19 +887,19 @@ export class TokenList extends Set<string> {
         return !!this.add(token)
     }
 
-    add(value: string): this {
+    add(value: string) {
         super.add(value)
         this.#callback([...this])
         return this
     }
 
-    delete(value: string): boolean {
+    delete(value: string) {
         const del = super.delete(value)
         this.#callback([...this])
         return del
     }
 
-    clear(): void {
+    clear() {
         super.clear()
         this.#callback([])
     }
@@ -899,53 +925,53 @@ export class StringMap implements Map<string, string> {
 
     constructor(callback: (arr: [string, string][], state: 'set' | 'clear' | 'delete', key?: string[], val?: string) => void) {
         this._callback = callback
+
         return new Proxy(this, {
             get: (target, key) => target[key] ?? target.get(key.toString()),
             set: (target, key, value) => !!target.set(key.toString(), value),
             ownKeys: (target) => [...target.keys()]
         })
     }
-    
-    clear(): void {
+
+    clear() {
         const keys = [...this.keys()]
         this._map.clear()
         this._callback([...this], 'clear', keys)
-        return 
     }
 
-    delete(key: string): boolean {
+    delete(key: string) {
         const del = this._map.delete(key)
         this._callback([...this], 'delete', [key])
         return del
     }
 
-    entries(): IterableIterator<[string, string]> {
+    entries() {
         return this._map.entries()
     }
 
-    forEach(callbackfn: (value: string, key: string, map: Map<string, string>) => void, thisArg?: any): void {
-        return this._map.forEach(callbackfn, thisArg)
+    forEach(callbackfn: (value: string, key: string, map: Map<string, string>) => void, thisArg?: any) {
+        this._map.forEach(callbackfn, thisArg)
     }
 
-    get(key: string): string {
+    get(key: string) {
         return this._map.get(key)
     }
 
-    has(key: string): boolean {
+    has(key: string) {
         return this._map.has(key)
     }
 
-    keys(): IterableIterator<string> {
+    keys() {
         return this._map.keys()
     }
 
-    set(key: string, value: string): this {
+    set(key: string, value: string) {
         this._map.set(key, value)
         this._callback([...this], 'set', [key], value)
         return this
     }
 
-    values(): IterableIterator<string> {
+    values() {
         return this._map.values()
     }
 
