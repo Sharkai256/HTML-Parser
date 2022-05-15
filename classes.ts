@@ -472,9 +472,8 @@ export class Node {
 
 export class Element extends Node {
     #attributes: AttributeMap
-    #classList: TokenList
-    #style: StringMap
-    #dataset: StringMap
+    #classList: ClassList
+    #style: StyleList
 
     constructor(
         name: string,
@@ -482,27 +481,9 @@ export class Element extends Node {
         ...attributes: Attribute[]
     ) {
         super(Node.ELEMENT_NODE, name.toUpperCase(), childNodes)
-        this.#attributes = new AttributeMap(...attributes)
-        this.#classList = new TokenList(arr => {
-            this.#attributes.set(new Attribute('class', arr.join(' ')))
-        })
-        this.#style = new StringMap(arr => {
-            this.#attributes.set(new Attribute('style', arr.map(v => v[0].replace(/[A-Z]/g, m => '-' + m.toLowerCase()) + ':' + v[1]).join(';')))
-        })
-        this.#dataset = new StringMap((arr, state, keys, val) => {
-            switch (state) {
-                case 'clear':
-                    for (const key of keys) {
-                        this.#attributes.remove('data-' + key.replace(/[A-Z]/g, m => '-' + m.toLowerCase()))
-                    }
-                    break
-                case 'delete':
-                    this.#attributes.remove('data-' + keys[0].replace(/[A-Z]/g, m => '-' + m.toLowerCase()))
-                    break
-                case 'set':
-                    this.#attributes.set(new Attribute('data-' + keys[0].replace(/[A-Z]/g, m => '-' + m.toLowerCase()), val))
-            }
-        })
+        this.#attributes = new AttributeMap(this, ...attributes)
+        this.#style = new StyleList(this)
+        this.#classList = new ClassList(this)
     }
 
     append(...nodes: (Node | string)[]) {
@@ -511,6 +492,8 @@ export class Element extends Node {
         }
     }
 
+    //! Поиск по наличию аттрибута не работает.
+    //! Поиск элемента с классом без его указания не работает.
     querySelector(selector: string): Element {
         return querySelector.call(this, selector, false)?.[0]
     }
@@ -624,12 +607,44 @@ export class Element extends Node {
         this.classList.value = value
     }
 
-    get style() {
-        return this.#style
+    get style(): StyleList {
+        return new Proxy(this.#style, {
+            get(target, key) {
+                return target[key] ?? target.getPropertyValue(key.toString())
+            },
+            set(target, key, value) {
+                if (key == 'cssText') target.cssText = value?.toString()
+                target.setProperty(key.toString(), value?.toString())
+                return true
+            },
+            ownKeys(target) {
+                return Object.keys(target)
+            }
+        })
+    }
+    set style(value: any) {
+        this.#style.cssText = value
     }
 
-    get dataset() {
-        return this.#dataset
+    get dataset(): {[key: string]: string} {
+        return new Proxy({
+            kk: 'one'
+        }, {
+            get: (target, key) => {
+                return this.getAttribute('data-' + key.toString().replace(/[A-Z]/g, m => '-' + m.toLowerCase()))
+            },
+            set: (target, key, value) => {
+                this.setAttribute('data-' + key.toString().replace(/[A-Z]/g, m => '-' + m.toLowerCase()), value)
+                return true
+            },
+            ownKeys: () => {
+                const arr = []
+                for (const attr of this.#attributes) {
+                    if (attr.name.startsWith('data-')) arr.push(attr.name)
+                }
+                return arr
+            }
+        })
     }
 }
 
@@ -799,52 +814,44 @@ export class DocumentType extends Node {
 }
 
 export class Attribute extends Node {
-    #nodeName: string
-    #nodeValue: string
-
     constructor(name: string, value: string) {
         super(Node.ATTRIBUTE_NODE, name, [], value)
-        this.#nodeName = name
-        this.#nodeValue = value
     }
 
     appendChild() {
         throw new Error('Attribute can not have children')
     }
 
-    get nodeName() {
-        return this.#nodeName
-    }
-
-    get nodeValue() {
-        return this.#nodeValue
-    }
-
     get name() {
-        return this.#nodeName
-    }
-    set name(value) {
-        this.#nodeName = value
+        return this.nodeName
     }
 
     get value() {
-        return this.#nodeValue
-    }
-    set value(value) {
-        this.#nodeValue = value
+        return this.nodeValue
     }
 }
 
-export class AttributeMap {
+export class AttributeMap implements Iterable<Attribute> {
+    #element: Element
     #itemsMap: {[name: string]: Attribute} = {}
 
-    constructor(...attributes: Attribute[]) {
+    constructor(element: Element, ...attributes: Attribute[]) {
+        this.#element = element
+
         for (const attr of attributes) {
             this.set(attr)
         }
     }
 
     set(attr: Attribute) {
+        if (this.#element.classList)
+            switch (attr.name) {
+                case 'style':
+                    this.#element.style.cssText = attr.value
+                    break
+                case 'class':
+                    this.#element.classList.value = attr.value
+            }
         this.#itemsMap[attr.name] = attr
     }
 
@@ -853,6 +860,13 @@ export class AttributeMap {
     }
 
     remove(name: string) {
+        switch (name) {
+            case 'style':
+                this.#element.style.cssText = ''
+                break
+            case 'class':
+                this.#element.classList.value = ''
+        }
         delete this.#itemsMap[name]
     }
 
@@ -863,127 +877,231 @@ export class AttributeMap {
     get length() {
         return Object.values(this.#itemsMap).length
     }
+
+    get [Symbol.iterator]() {
+        return () => {
+            let index = 0
+            const arr = Object.values(this.#itemsMap)
+
+            return {
+                next: () => index < arr.length
+                ? {
+                    value: arr[index++],
+                    done: false
+                }
+                : {
+                    done: true
+                }
+            } as Iterator<Attribute>
+        }
+    }
 }
 
-export class TokenList extends Set<string> {
-    #callback: (arr: string[]) => void
+export class ClassList implements Iterable<string> {
+    #elem: Element
+    #classList: string[] = []
 
-    constructor(callback: (arr: string[]) => void) {
-        super()
-        this.#callback = callback
+    #getClass() {
+        return this.#elem.getAttribute('class')
+    }
+
+    #fillList(line: string) {
+        if (line && line !== '')
+            for (const name of line.split(' '))
+                this.#classList.push(name)
+    }
+
+    #updateAttr() {
+        this.#elem.setAttribute('class', this.value)
+    }
+
+    constructor(element: Element) {
+        this.#elem = element
+
+        this.#fillList(this.#getClass())
+    }
+
+    add(value: string) {
+        this.#classList.push(value)
+        this.#updateAttr()
+        return this
+    }
+
+    remove(value: string) {
+        const i = this.#classList.indexOf(value)
+        if (i != -1) {
+            this.#classList.splice(i, 1)
+            this.#updateAttr()
+
+            return true
+        }
+        return false
+    }
+
+    clear() {
+        this.#classList = []
+        this.#updateAttr()
+    }
+
+    contains(token: string) {
+        return this.#classList.includes(token)
     }
 
     replace(oldToken: string, newToken: string) {
-        if (this.delete(oldToken)) return !!this.add(newToken)
+        const i = this.#classList.indexOf(oldToken)
+        if (i != -1) {
+            this.#classList.splice(i, 1, newToken)
+            this.#updateAttr()
+
+            return true
+        }
         return false
     }
 
     toggle(token: string, force?: boolean) {
-        if (typeof force == 'boolean')
-        if (force) return !!this.add(token)
-        else return this.delete(token)
-
-        if (this.delete(token)) return false
-        return !!this.add(token)
+        if (force ?? !this.#classList.includes(token)) {
+            return !!this.add(token)
+        } else {
+            !this.remove(token)
+            return false
+        }
     }
 
-    add(value: string) {
-        super.add(value)
-        this.#callback([...this])
-        return this
-    }
-
-    delete(value: string) {
-        const del = super.delete(value)
-        this.#callback([...this])
-        return del
-    }
-
-    clear() {
-        super.clear()
-        this.#callback([])
-    }
-
-    get value() {
-        return Array.from(this.values()).join(' ')
-    }
-    set value(value) {
-        this.clear()
-        value.split(' ').forEach(v => this.add(v))
-    }
-
-    get [Symbol.toStringTag]() {
-        return 'TokenList'
-    }
-}
-
-export class StringMap implements Map<string, string> {
-    [key: string | symbol]: any
-
-    private _callback: (arr: [string, string][], state: 'set' | 'clear' | 'delete', key?: string[], val?: string) => void
-    private _map = new Map<string, string>()
-
-    constructor(callback: (arr: [string, string][], state: 'set' | 'clear' | 'delete', key?: string[], val?: string) => void) {
-        this._callback = callback
-
-        return new Proxy(this, {
-            get: (target, key) => target[key] ?? target.get(key.toString()),
-            set: (target, key, value) => !!target.set(key.toString(), value),
-            ownKeys: (target) => [...target.keys()]
-        })
-    }
-
-    clear() {
-        const keys = [...this.keys()]
-        this._map.clear()
-        this._callback([...this], 'clear', keys)
-    }
-
-    delete(key: string) {
-        const del = this._map.delete(key)
-        this._callback([...this], 'delete', [key])
-        return del
-    }
-
-    entries() {
-        return this._map.entries()
-    }
-
-    forEach(callbackfn: (value: string, key: string, map: Map<string, string>) => void, thisArg?: any) {
-        this._map.forEach(callbackfn, thisArg)
-    }
-
-    get(key: string) {
-        return this._map.get(key)
-    }
-
-    has(key: string) {
-        return this._map.has(key)
+    item(index: number) {
+        return this.#classList[index]
     }
 
     keys() {
-        return this._map.keys()
-    }
-
-    set(key: string, value: string) {
-        this._map.set(key, value)
-        this._callback([...this], 'set', [key], value)
-        return this
+        return this.#classList.keys()
     }
 
     values() {
-        return this._map.values()
+        return this.#classList.values()
     }
 
-    get size() {
-        return this._map.size
+    entries() {
+        return this.#classList.entries()
+    }
+
+    forEach(callback: (currentValue: string, currentIndex: number, listObj: string[]) => never, thisArg: any = this) {
+        for (let i = 0; i < this.#classList.length; i++) {
+            callback.call(thisArg, this.#classList[i], i, [...this.#classList])
+        }
+    }
+
+    get value() {
+        return this.#classList.join(' ')
+    }
+    set value(value) {
+        if (value == this.value) return
+        this.#classList = value.split(' ')
+        this.#updateAttr()
+    }
+
+    get length() {
+        return this.#classList.length
     }
 
     get [Symbol.iterator]() {
-        return () => this.entries()
+        return () => {
+            let index = 0
+            const line = this.#getClass()
+            const arr = (line && line !== '') ? line.split(' ') : []
+
+            return {
+                next: () => index < arr.length
+                ? {
+                    value: arr[index++],
+                    done: false
+                }
+                : {
+                    done: true
+                }
+            } as Iterator<string>
+        }
+    }
+}
+
+export class StyleList implements Iterable<string> {
+    #elem: Element
+    #styleMap: {[key: string]: string} = {}
+
+    #fillMap(value: string) {
+        for (const line of value.split(';')) {
+            const [, name, value] = /^\s*([a-z-]+)\s*:\s*(.+?)?\s*$/.exec(line) ?? [null, null, null]
+            if (!value) continue
+            this.#styleMap[name] = value
+        }
     }
 
-    get [Symbol.toStringTag]() {
-        return 'StringMap'
+    #updateAttr() {
+        this.#elem.setAttribute('style', this.cssText)
     }
+
+    #formatName = (name: string) => name?.replace(/[A-Z]/g, m => '-' + m.toLowerCase())
+
+    constructor(element: Element) {
+        this.#elem = element
+
+        const style = this.#elem.getAttribute('style')
+        if (!style) return
+
+        this.#fillMap(style)
+    }
+
+    getPropertyValue(name: string) {
+        name = this.#formatName(name)
+        return this.#styleMap[name]
+    }
+
+    setProperty(name: string, value: string) {
+        if (!value || !/\S/.test(value)) return this.removeProperty(name)
+        name = this.#formatName(name)
+        this.#styleMap[name] = value
+        this.#updateAttr()
+    }
+
+    removeProperty(name: string) {
+        name = this.#formatName(name)
+        delete this.#styleMap[name]
+        this.#updateAttr()
+    }
+
+    item(index: number) {
+        return Object.values(this.#styleMap)[index]
+    }
+
+    get cssText() {
+        return Object.entries(this.#styleMap).map(([k, v]) => `${k}:${v}`).join(';')
+    }
+    set cssText(value) {
+        if (value == this.cssText) return
+        this.#styleMap = {}
+        this.#fillMap(value)
+        this.#updateAttr()
+    }
+
+    get length() {
+        return Object.keys(this.#styleMap).length
+    }
+
+    get [Symbol.iterator]() {
+        return () => {
+            let index = 0
+            const arr = Object.keys(this.#styleMap)
+
+            return {
+                next: () => index < arr.length
+                ? {
+                    value: arr[index++],
+                    done: false
+                }
+                : {
+                    done: true
+                }
+            } as Iterator<string>
+        }
+    }
+
+    [key: string | symbol]: any
 }
