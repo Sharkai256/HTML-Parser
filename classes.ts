@@ -285,7 +285,7 @@ function querySelector(selector: string, moreThanOne: boolean = false) {
         if (filter.id !== '*' && iter.id !== filter.id) return false;
 
         for (const elem of filter.class) {
-            if (!iter.classList.contains(elem)) return false; 
+            if (!iter.classList.contains(elem)) return false;
         }
 
         label1: for (const obj of filter.attributes) {
@@ -431,22 +431,22 @@ export class Node {
 
             case Node.ATTRIBUTE_NODE:
                 return new Attribute(this.nodeName, this.nodeValue);
-    
+
             case Node.TEXT_NODE:
                 return new Text(this.nodeValue);
-    
+
             case Node.CDATA_SECTION_NODE:
                 return new CDATA(this.nodeName);
-    
+
             case Node.PROCESSING_INSTRUCTION_NODE:
                 return new ProcessingInstruction(this.nodeName, this.nodeValue);
-    
+
             case Node.COMMENT_NODE:
                 return new Comment(this.nodeValue);
-    
+
             case Node.DOCUMENT_NODE:
                 return new DOM(deepCheck());
-    
+
             case Node.DOCUMENT_TYPE_NODE:
                 return new DocumentType(this.nodeName);
         }
@@ -507,20 +507,20 @@ export class Node {
                         type: 'cdata',
                         name: node.nodeName
                     }
-        
+
                 case Node.PROCESSING_INSTRUCTION_NODE:
                     return {
                         type: 'proc',
                         name: node.nodeName,
                         value: node.nodeValue
                     }
-        
+
                 case Node.COMMENT_NODE:
                     return {
                         type: 'comment',
                         value: node.nodeValue
                     }
-        
+
                 case Node.DOCUMENT_NODE:
                     const res: JSONode[] = [];
                     for (const child of node.childNodes) {
@@ -530,7 +530,7 @@ export class Node {
                         type: 'document',
                         childNodes: res
                     }
-        
+
                 case Node.DOCUMENT_TYPE_NODE:
                     return {
                         type: 'doctype',
@@ -606,6 +606,14 @@ export class Element extends Node {
         }
     }
 
+    //! Позволяет найти элемент, на котором был вызван метод.
+    //! Ошибочный запрос '' воспринимет как '*'.
+    //! Ошибочный запрос '[value=one' воспринимет как '[value=one]'.
+    //! Ошибочный запрос '[value=on]e' воспринимет как '[value=one]'.
+    //! Принимает неопределённое количество символов '*' как валидный запрос.
+    //! Не работают модификаторы сравнения аттрибутов.
+    //? Добавить функционал группировки.
+    //? Обобщить ошибки парсинга селектора до "'%selector%' is not a valid selector".
     querySelector(selector: string): Element {
         return querySelector.call(this, selector, false)?.[0]
     }
@@ -660,6 +668,7 @@ export class Element extends Node {
         this.#attributes.remove(name)
     }
 
+    //! Если аттрибут существует, и метод был вызван с force=true, значение не должно исчезать.
     toggleAttribute(name: string, force?: boolean) {
         if (typeof force == 'boolean')
         if (force) this.setAttribute(name, '')
@@ -722,11 +731,13 @@ export class Element extends Node {
     get style(): StyleList {
         return new Proxy(this.#style, {
             get(target, key) {
-                return target[key] ?? target.getPropertyValue(key.toString())
+                let ownProp = target[key]
+                if (typeof ownProp == 'function') ownProp = (<Function>ownProp).bind(target)
+                return ownProp ?? target.getPropertyValue(key.toString())
             },
             set(target, key, value) {
                 if (key == 'cssText') target.cssText = value?.toString()
-                target.setProperty(key.toString(), value?.toString())
+                else target.setProperty(key.toString(), value?.toString())
                 return true
             },
             ownKeys(target) {
