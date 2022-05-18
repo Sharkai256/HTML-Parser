@@ -1,5 +1,6 @@
 import serialize from './ser'
 import parse from './index'
+import { create } from 'domain';
 
 type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 
@@ -226,19 +227,6 @@ const parseSelector = (selector: string) => {
 }
 
 function querySelector(selector: string, moreThanOne: boolean = false) {
-    const equals = (array1: string[], array2: string[]) => {
-        if (!array2)
-            return false;
-        if (array1.length != array2.length)
-            return false;
-        for (let i = 0; i < array1.length; i++) {
-            if (array1[i] != array2[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     let filter = parseSelector(selector);
     if (!filter) return null;
     /*
@@ -296,15 +284,16 @@ function querySelector(selector: string, moreThanOne: boolean = false) {
 
         if (filter.id !== '*' && iter.id !== filter.id) return false;
 
-        if (!equals([...iter.classList], filter.class)) return false;
+        for (const elem of filter.class) {
+            if (!iter.classList.contains(elem)) return false;
+        }
 
         label1: for (const obj of filter.attributes) {
             const attr = iter.attributes.get(obj.name)
 
             if (!attr) return false;
 
-            if (typeof obj.value !== "string" && !attr) return false;
-
+            if (typeof obj.value == "string")
             switch (obj.mod) {
                 case '$':
                     if (!attr.value.endsWith(obj.value)) return false;
@@ -346,6 +335,15 @@ function querySelector(selector: string, moreThanOne: boolean = false) {
 
     recSearch(this);
     return resArr;
+}
+
+interface JSONode {
+    type?: string
+    name?: string
+    value?: string
+    childNodes?: JSONode[]
+    attributes?: JSONode[]
+    params?: any[]
 }
 
 export class Node {
@@ -405,6 +403,55 @@ export class Node {
         return node
     }
 
+    cloneNode(deep: boolean = true) {
+
+        const deepCheck = (): Node[] => {
+            let childArr = [];
+            if (deep) {
+                for (const child of this.childNodes) {
+                    childArr.push(child.cloneNode())
+                }
+            }
+            return childArr;
+        }
+
+        switch (+this) {
+            case Node.ELEMENT_NODE:
+                let elem = new Element(this.nodeName, deepCheck())
+                for (const attr of (<Element>(<unknown>this)).attributes) {
+                    elem.setAttribute(attr.name, attr.value)
+                }
+                if (this instanceof SingleTag) {
+                    elem = new SingleTag(this.nodeName, true);
+                    for (const attr of (<SingleTag>(<unknown>this)).attributes) {
+                        elem.setAttribute(attr.name, attr.value)
+                    }
+                }
+                return elem;
+
+            case Node.ATTRIBUTE_NODE:
+                return new Attribute(this.nodeName, this.nodeValue);
+
+            case Node.TEXT_NODE:
+                return new Text(this.nodeValue);
+
+            case Node.CDATA_SECTION_NODE:
+                return new CDATA(this.nodeName);
+
+            case Node.PROCESSING_INSTRUCTION_NODE:
+                return new ProcessingInstruction(this.nodeName, this.nodeValue);
+
+            case Node.COMMENT_NODE:
+                return new Comment(this.nodeValue);
+
+            case Node.DOCUMENT_NODE:
+                return new DOM(deepCheck());
+
+            case Node.DOCUMENT_TYPE_NODE:
+                return new DocumentType(this.nodeName);
+        }
+    }
+
     replaceChild(newChild: Node, oldChild: Node) {
         if (oldChild.parentNode != this) throw new Error('OldChild is not a child of this element')
         if (newChild.contains(this)) throw new Error('Child node can not contain parent node')
@@ -425,6 +472,73 @@ export class Node {
         if (node.parentNode == this) return true
         else if (!node.parentNode) return false
         return this.contains(node.parentNode)
+    }
+
+    toJSON(): string {
+        const createObj = (node: Node): JSONode => {
+            switch (+node) {
+                case Node.ELEMENT_NODE:
+                    const elem: JSONode = {
+                        type: 'element',
+                        name: node.nodeName,
+                        childNodes: node.childNodes.map(v => createObj(v)),
+                        attributes: [...(<Element>node).attributes].map(v => createObj(v))
+                    }
+                    if (node instanceof SingleTag) {
+                        elem.type = 'singletag'
+                        elem.params = [node.endClosed]
+                    }
+                    return elem;
+
+                case Node.ATTRIBUTE_NODE:
+                    return {
+                        name: node.nodeName,
+                        value: node.nodeValue
+                    }
+
+                case Node.TEXT_NODE:
+                    return {
+                        type: 'text',
+                        value: node.nodeValue.replace(/\r/g, '')
+                    }
+
+                case Node.CDATA_SECTION_NODE:
+                    return {
+                        type: 'cdata',
+                        name: node.nodeName
+                    }
+
+                case Node.PROCESSING_INSTRUCTION_NODE:
+                    return {
+                        type: 'proc',
+                        name: node.nodeName,
+                        value: node.nodeValue
+                    }
+
+                case Node.COMMENT_NODE:
+                    return {
+                        type: 'comment',
+                        value: node.nodeValue
+                    }
+
+                case Node.DOCUMENT_NODE:
+                    const res: JSONode[] = [];
+                    for (const child of node.childNodes) {
+                        res.push(createObj(child))
+                    }
+                    return {
+                        type: 'document',
+                        childNodes: res
+                    }
+
+                case Node.DOCUMENT_TYPE_NODE:
+                    return {
+                        type: 'doctype',
+                        name: node.nodeName
+                    }
+            }
+        }
+        return JSON.stringify(createObj(this))
     }
 
     toString() {
@@ -492,8 +606,14 @@ export class Element extends Node {
         }
     }
 
-    //! Поиск по наличию аттрибута не работает.
-    //! Поиск элемента с классом без его указания не работает.
+    //! Позволяет найти элемент, на котором был вызван метод.
+    //! Ошибочный запрос '' воспринимет как '*'.
+    //! Ошибочный запрос '[value=one' воспринимет как '[value=one]'.
+    //! Ошибочный запрос '[value=on]e' воспринимет как '[value=one]'.
+    //! Принимает неопределённое количество символов '*' как валидный запрос.
+    //! Не работают модификаторы сравнения аттрибутов.
+    //? Добавить функционал группировки.
+    //? Обобщить ошибки парсинга селектора до "'%selector%' is not a valid selector".
     querySelector(selector: string): Element {
         return querySelector.call(this, selector, false)?.[0]
     }
@@ -548,6 +668,7 @@ export class Element extends Node {
         this.#attributes.remove(name)
     }
 
+    //! Если аттрибут существует, и метод был вызван с force=true, значение не должно исчезать.
     toggleAttribute(name: string, force?: boolean) {
         if (typeof force == 'boolean')
         if (force) this.setAttribute(name, '')
@@ -666,11 +787,13 @@ export class Element extends Node {
     get style(): StyleList {
         return new Proxy(this.#style, {
             get(target, key) {
-                return target[key] ?? target.getPropertyValue(key.toString())
+                let ownProp = target[key]
+                if (typeof ownProp == 'function') ownProp = (<Function>ownProp).bind(target)
+                return ownProp ?? target.getPropertyValue(key.toString())
             },
             set(target, key, value) {
                 if (key == 'cssText') target.cssText = value?.toString()
-                target.setProperty(key.toString(), value?.toString())
+                else target.setProperty(key.toString(), value?.toString())
                 return true
             },
             ownKeys(target) {
