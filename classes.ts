@@ -561,6 +561,62 @@ export class Element extends Node {
         return !!this.#attributes.get(name)
     }
 
+    getElementById(id: string): Element {
+        let found: Element = null
+        for (const elem of this.children) {
+            if (id == elem.id) return elem
+            found = elem.getElementById(id)
+            if (found) break
+        }
+        if (found) return found
+    }
+
+    getElementsByTagName(name: string): Element[] {
+        const ret: Element[] = []
+        const rec = (elem: Element) => {
+            for (const child of elem.children) {
+                if (name.toUpperCase() == child.tagName) ret.push(child)
+                rec(child)
+            }
+        }
+        rec(this) 
+        return ret
+    }
+
+    getElementsByName(name: string): Element[] {
+        const ret: Element[] = []
+        const rec = (elem: Element) => {
+            for (const child of elem.children) {
+                if (name == child.getAttribute('name')) ret.push(child)
+                rec(child)
+            }
+        }
+        rec(this) 
+        return ret
+    }
+ 
+    getElementsByClassName(names: string): Element[] {
+        names = names.trim()
+        const required = names.split(/ +/)
+        const ret: Element[] = []
+        const rec = (elem: Element) => {
+            for (const child of elem.children) {
+                let flag = true
+                for (const className of required) {
+                    if (!child.classList.contains(className)) {
+                        flag = false
+                        break
+                    }
+                }
+                if (flag) ret.push(child)
+                rec(child)
+            }
+        }
+        rec(this)
+        
+        return ret
+    }
+
     get children(): Element[] {
         return <Element[]>this.childNodes.filter(v => v instanceof Element)
     }
