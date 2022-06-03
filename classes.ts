@@ -4,7 +4,7 @@ import query from './query'
 
 type NodeType = 1 | 2 | 3 | 4 | 7 | 8 | 9 | 10
 
-interface JSONode {
+export interface JSONode {
     type?: string
     name?: string
     value?: string
@@ -159,6 +159,7 @@ export class Node {
 
                 case Node.ATTRIBUTE_NODE:
                     return {
+                        type: 'attr',
                         name: node.nodeName,
                         value: node.nodeValue
                     }
@@ -327,10 +328,12 @@ export class Element extends Node {
         this.#attributes.remove(name)
     }
 
-    //! Если аттрибут существует, и метод был вызван с force=true, значение не должно исчезать.
     toggleAttribute(name: string, force?: boolean) {
         if (typeof force == 'boolean')
-        if (force) this.setAttribute(name, '')
+        if (force) {
+            if (!this.hasAttribute(name)) 
+                this.setAttribute(name, '')
+        }
         else this.removeAttribute(name)
 
         else if (this.hasAttribute(name)) this.removeAttribute(name)

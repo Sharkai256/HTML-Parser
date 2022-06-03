@@ -1,6 +1,60 @@
 import * as Simple from './classes';
 
-export default (html: string): Simple.DOM => {
+const fromJSON = (json: string | Simple.JSONode): Simple.Node => {
+    let obj: Simple.JSONode
+    if (typeof json == 'string') obj = JSON.parse(json)
+    else obj = json
+
+    const parseNode = (json: Simple.JSONode): Simple.Node => {
+        const children: Simple.Node[] = []
+        const attr: Simple.Attribute[] = []
+        switch (json.type) {
+            case 'element':
+                for (const child of json.childNodes) {
+                    children.push(parseNode(child))
+                }
+
+                for (const attribute of json.attributes) {
+                    attr.push(<Simple.Attribute>parseNode(attribute))
+                }
+                return new Simple.Element(json.name, children, ...attr)
+                
+            case 'singletag':
+                for (const attribute of json.attributes) {
+                    attr.push(<Simple.Attribute>parseNode(attribute))
+                }
+                return new Simple.SingleTag(json.name, json.params[0], ...attr)
+
+            case 'attr':
+                return new Simple.Attribute(json.name, json.value)
+
+            case 'text':
+                return new Simple.Text(json.value)
+
+            case 'cdata':
+                return new Simple.CDATA(json.name)
+
+            case 'proc':
+                return new Simple.ProcessingInstruction(json.name, json.value)
+
+            case 'comment':
+                return new Simple.Comment(json.value)
+
+            case 'document':
+                for (const child of json.childNodes) {
+                    children.push(parseNode(child))
+                }
+                return new Simple.DOM(children)
+
+            case 'doctype':
+                return new Simple.DocumentType(json.name)
+        }
+    }
+    
+    return parseNode(obj)
+}
+
+const parse = (html: string): Simple.DOM => {
     var tags: Simple.Node[] = [];
     var inTag = false;
     var buffer = '';
@@ -73,3 +127,7 @@ export default (html: string): Simple.DOM => {
 
     return new Simple.DOM(tags);
 }
+
+parse.fromJSON = fromJSON
+
+export default parse
