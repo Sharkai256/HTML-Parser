@@ -79,4 +79,8 @@ class DOM extends Element {
 class SingleTag extends Element {
     ✔️ get endClosed: boolean // Указывает сериализатору добавлять '/' в конец тега.
 }
+
+class Text extends Node {
+    ⚠️ constructor(data: string)
+}
 ```

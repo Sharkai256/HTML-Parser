@@ -274,6 +274,9 @@ export class Element extends Node {
         }
     }
 
+    //! Не работает поиск по наличию аттрибута.
+    //! Воспринимает "in[value="Ohayo Sekai!"]put" как валидный запрос.
+    //* Сделать поддержку псевдо-класов.
     querySelector(selector: string): Element {
         return query.call(this, selector, false)?.[0]
     }
@@ -511,6 +514,7 @@ export class SingleTag extends Element {
 }
 
 export class Text extends Node {
+    //! Позволяет эксплойтить XSS.
     constructor(text: string) {
         super(Node.TEXT_NODE, '#text', [], text)
     }

@@ -98,64 +98,65 @@ const parseSelector = (selector: string) => {
             const char = string[i];
             switch (state) {
                 case SELECTOR_FIRST: // [a-z\[\.#:\*]
-                if (a_z.includes(char)) {
-                    lastSel().name += char;
-                    continue;
-                }
-                switch (char) {
-                    case '[':
-                        lastTag().selectors.push({
-                            type: 'attr',
-                            name: '',
-                            value: '',
-                            ext: false
-                        })
-                        expectsSymbol++;
-                        state = ATTRIBUTE_NAME_FIRST;
+                    if (a_z.includes(char)) {
+                        lastTag().name = char;
+                        state = SELECTOR_REST;
                         continue;
+                    }
+                    switch (char) {
+                        case '[':
+                            lastTag().selectors.push({
+                                type: 'attr',
+                                name: '',
+                                value: '',
+                                ext: false
+                            })
+                            expectsSymbol++;
+                            state = ATTRIBUTE_NAME_FIRST;
+                            continue;
 
-                    case '.':
-                        lastTag().selectors.push({
-                            type: 'class',
-                            name: ''
-                        })
-                        state = CLASS_FIRST;
-                        continue;
+                        case '.':
+                            lastTag().selectors.push({
+                                type: 'class',
+                                name: ''
+                            })
+                            state = CLASS_FIRST;
+                            continue;
 
-                    case '#':
-                        lastTag().selectors.push({
-                            type: 'id',
-                            name: ''
-                        })
-                        state = ID_FIRST;
-                        continue;
+                        case '#':
+                            lastTag().selectors.push({
+                                type: 'id',
+                                name: ''
+                            })
+                            state = ID_FIRST;
+                            continue;
 
-                    case ':':
-                        lastTag().selectors.push({
-                            type: 'pseudo',
-                            name: ''
-                        })
-                        state = PSEUDO_CLASS_FIRST;
-                        continue;
+                        case ':':
+                            lastTag().selectors.push({
+                                type: 'pseudo',
+                                name: ''
+                            })
+                            state = PSEUDO_CLASS_FIRST;
+                            continue;
 
-                    case ')':
-                        if (recursion) {
-                            return {
-                                index: i,
-                                tags,
+                        case ')':
+                            if (recursion) {
+                                return {
+                                    index: i,
+                                    tags,
+                                }
                             }
-                        }
-                        continue;
+                            continue;
 
-                    case '*':
-                        state = SPEC;
-                        continue;
+                        case '*':
+                            state = SPEC;
+                            continue;
                     }
                     err();
 
                 case SELECTOR_REST: // [a-z\[\.#:>~\+\, ]
                     if (a_z.includes(char)){
-                        lastSel().name += char;
+                        lastTag().name += char;
                         continue;
                     }
                     switch (char) {
