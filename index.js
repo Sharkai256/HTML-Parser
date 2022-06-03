@@ -1,61 +1,74 @@
-import * as Simple from './classes';
-
-const fromJSON = (json: string | Simple.JSONode): Simple.Node => {
-    let obj: Simple.JSONode
-    if (typeof json == 'string') obj = JSON.parse(json)
-    else obj = json
-
-    const parseNode = (json: Simple.JSONode): Simple.Node => {
-        const children: Simple.Node[] = []
-        const attr: Simple.Attribute[] = []
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+const Simple = __importStar(require("./classes"));
+const fromJSON = (json) => {
+    let obj;
+    if (typeof json == 'string')
+        obj = JSON.parse(json);
+    else
+        obj = json;
+    const parseNode = (json) => {
+        const children = [];
+        const attr = [];
         switch (json.type) {
             case 'element':
                 for (const child of json.childNodes) {
-                    children.push(parseNode(child))
+                    children.push(parseNode(child));
                 }
-
                 for (const attribute of json.attributes) {
-                    attr.push(<Simple.Attribute>parseNode(attribute))
+                    attr.push(parseNode(attribute));
                 }
-                return new Simple.Element(json.name, children, ...attr)
-                
+                return new Simple.Element(json.name, children, ...attr);
             case 'singletag':
                 for (const attribute of json.attributes) {
-                    attr.push(<Simple.Attribute>parseNode(attribute))
+                    attr.push(parseNode(attribute));
                 }
-                return new Simple.SingleTag(json.name, json.params[0], ...attr)
-
+                return new Simple.SingleTag(json.name, json.params[0], ...attr);
             case 'attr':
-                return new Simple.Attribute(json.name, json.value)
-
+                return new Simple.Attribute(json.name, json.value);
             case 'text':
-                return new Simple.Text(json.value)
-
+                return new Simple.Text(json.value);
             case 'cdata':
-                return new Simple.CDATA(json.name)
-
+                return new Simple.CDATA(json.name);
             case 'proc':
-                return new Simple.ProcessingInstruction(json.name, json.value)
-
+                return new Simple.ProcessingInstruction(json.name, json.value);
             case 'comment':
-                return new Simple.Comment(json.value)
-
+                return new Simple.Comment(json.value);
             case 'document':
                 for (const child of json.childNodes) {
-                    children.push(parseNode(child))
+                    children.push(parseNode(child));
                 }
-                return new Simple.DOM(children)
-
+                return new Simple.DOM(children);
             case 'doctype':
-                return new Simple.DocumentType(json.name)
+                return new Simple.DocumentType(json.name);
         }
-    }
-    
-    return parseNode(obj)
-}
-
-const parse = (html: string): Simple.DOM => {
-    var tags: Simple.Node[] = [];
+    };
+    return parseNode(obj);
+};
+const parse = (html) => {
+    var tags = [];
     var inTag = false;
     var buffer = '';
     label1: for (const char of html) {
@@ -64,15 +77,19 @@ const parse = (html: string): Simple.DOM => {
             if (buffer[0] == '!') {
                 if (/!\[CDATA\[.*\]\]/s.test(buffer)) {
                     tags.push(new Simple.CDATA(buffer.substring(8, buffer.length - 2)));
-                } else if (/!--.*--/s.test(buffer)) {
+                }
+                else if (/!--.*--/s.test(buffer)) {
                     tags.push(new Simple.Comment(buffer.substring(3, buffer.length - 2)));
-                } else if (/!DOCTYPE .*/s.test(buffer)) {
+                }
+                else if (/!DOCTYPE .*/s.test(buffer)) {
                     tags.push(new Simple.DocumentType(buffer.substring(9)));
                 }
-            } else if (buffer[0] == '?') {
+            }
+            else if (buffer[0] == '?') {
                 const array = /\?([a-z]+)\s(.*)\s\?/s.exec(buffer);
                 tags.push(new Simple.ProcessingInstruction(array[1], array[2]));
-            } else {
+            }
+            else {
                 if (buffer[0] == '/') {
                     buffer = buffer.substring(1);
                     var array = [];
@@ -86,7 +103,8 @@ const parse = (html: string): Simple.DOM => {
                             tags[i] = new Simple.Element(buffer, array.reverse(), ...atrArr);
                             buffer = '';
                             continue label1;
-                        } else {
+                        }
+                        else {
                             array.push(tags.pop());
                         }
                     }
@@ -100,8 +118,10 @@ const parse = (html: string): Simple.DOM => {
                     const atr = buffer.substring(sIndx);
                     atrArr = atr.match(/[a-z-]+(=(".+?"|'.+?'|\S+))?/g).map(v => {
                         const [, atrName, atrValue] = /([a-z-]+)(?:=(.+))?/.exec(v);
-                        if (typeof atrValue == 'undefined') return new Simple.Attribute(atrName, '');
-                        if (atrValue[0] != '"' && atrValue[0] != "'") return new Simple.Attribute(atrName, atrValue);
+                        if (typeof atrValue == 'undefined')
+                            return new Simple.Attribute(atrName, '');
+                        if (atrValue[0] != '"' && atrValue[0] != "'")
+                            return new Simple.Attribute(atrName, atrValue);
                         return new Simple.Attribute(atrName, atrValue.substring(1, atrValue.length - 1));
                     });
                 }
@@ -124,10 +144,7 @@ const parse = (html: string): Simple.DOM => {
             buffer += char;
         }
     }
-
     return new Simple.DOM(tags);
-}
-
-parse.fromJSON = fromJSON
-
-export = parse;
+};
+parse.fromJSON = fromJSON;
+module.exports = parse;

@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "Parses and serializes (HTML ⇄ DOM)",
   "main": "index.js",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
+  "types": "index.d.ts",
   "scripts": {
     "test": "ts-node test.ts"
   },
@@ -23,8 +21,7 @@
     "README.md",
     "LICENSE",
     "*.js",
-    "*.d.ts",
-    "tests/*"
+    "*.d.ts"
   ],
   "keywords": [
     "html",

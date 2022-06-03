@@ -57,4 +57,4 @@ const toTag = (elem: Simple.Element, closed: boolean): string => {
     return ret + '>'
 }
 
-export default serialize
+export = serialize
