@@ -21,5 +21,5 @@ const dom = parser(html)
 
 dom.title = 'New Title'
 
-console.log(dom.serialize())
+console.log(dom.toString())
 ```

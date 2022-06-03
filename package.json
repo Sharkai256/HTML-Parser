@@ -1,6 +1,6 @@
 {
   "name": "html-ps",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Parses and serializes (HTML ⇄ DOM)",
   "main": "index.js",
   "publishConfig": {
@@ -22,8 +22,9 @@
   "files": [
     "README.md",
     "LICENSE",
-    "index.js",
-    "index.d.ts"
+    "*.js",
+    "*.d.ts",
+    "tests/*"
   ],
   "keywords": [
     "html",
