@@ -1,5 +1,5 @@
 import fs from 'fs'
-import parser from './index'
+import parser from './src/index'
 
 /**
  * Type for any iterable object

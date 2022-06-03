@@ -1,4 +1,4 @@
-import * as Simple from './classes'
+import * as Simple from './src/classes'
 
 export default new Simple.DOM([
     new Simple.Comment('Start of file'),
