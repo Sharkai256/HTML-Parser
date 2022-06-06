@@ -514,8 +514,11 @@ export class SingleTag extends Element {
 }
 
 export class Text extends Node {
-    //! Позволяет эксплойтить XSS.
     constructor(text: string) {
+         text = text.replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        
         super(Node.TEXT_NODE, '#text', [], text)
     }
 }

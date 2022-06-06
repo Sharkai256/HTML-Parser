@@ -81,6 +81,6 @@ class SingleTag extends Element {
 }
 
 class Text extends Node {
-    ⚠️ constructor(data: string)
+    ✔️ constructor(data: string)
 }
 ```
