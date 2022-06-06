@@ -43,7 +43,8 @@ const parseSelector = (selector) => {
             switch (state) {
                 case SELECTOR_FIRST: // [a-z\[\.#:\*]
                     if (a_z.includes(char)) {
-                        lastSel().name += char;
+                        lastTag().name = char;
+                        state = SELECTOR_REST;
                         continue;
                     }
                     switch (char) {
@@ -93,7 +94,7 @@ const parseSelector = (selector) => {
                     err();
                 case SELECTOR_REST: // [a-z\[\.#:>~\+\, ]
                     if (a_z.includes(char)) {
-                        lastSel().name += char;
+                        lastTag().name += char;
                         continue;
                     }
                     switch (char) {
@@ -232,7 +233,7 @@ const parseSelector = (selector) => {
                 case ATTRIBUTE_VAL_QUOTES_END: // \]
                     if (char == ']') {
                         expectsSymbol--;
-                        state = SELECTOR_REST;
+                        state = SPEC;
                         continue;
                     }
                     err();
@@ -648,7 +649,7 @@ const parseSelector = (selector) => {
                     case 'attr':
                         tag.attributes.push({
                             name: sel.name,
-                            value: sel.ext ? sel.value : '*',
+                            value: sel.ext ? sel.value : null,
                             mod: sel.mod
                         });
                         break;

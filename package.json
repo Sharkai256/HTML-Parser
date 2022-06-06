@@ -1,6 +1,6 @@
 {
   "name": "html-ps",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parses and serializes (HTML ⇄ DOM)",
   "main": "index.js",
   "types": "index.d.ts",

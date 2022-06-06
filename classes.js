@@ -229,6 +229,7 @@ class Element extends Node {
             this.appendChild(n instanceof Node ? n : new Text(n));
         }
     }
+    //* Сделать поддержку псевдо-класов.
     querySelector(selector) {
         return query_1.default.call(this, selector, false)?.[0];
     }
@@ -451,6 +452,9 @@ class SingleTag extends Element {
 exports.SingleTag = SingleTag;
 class Text extends Node {
     constructor(text) {
+        text = text.replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
         super(Node.TEXT_NODE, '#text', [], text);
     }
 }
