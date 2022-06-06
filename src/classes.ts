@@ -274,8 +274,6 @@ export class Element extends Node {
         }
     }
 
-    //! Не работает поиск по наличию аттрибута.
-    //! Воспринимает "in[value="Ohayo Sekai!"]put" как валидный запрос.
     //* Сделать поддержку псевдо-класов.
     querySelector(selector: string): Element {
         return query.call(this, selector, false)?.[0]

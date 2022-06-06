@@ -307,7 +307,7 @@ const parseSelector = (selector: string) => {
                 case ATTRIBUTE_VAL_QUOTES_END: // \]
                     if (char == ']') {
                         expectsSymbol--;
-                        state = SELECTOR_REST;
+                        state = SPEC;
                         continue;
                     }
                     err()
@@ -755,7 +755,7 @@ const parseSelector = (selector: string) => {
                     case 'attr':
                         tag.attributes.push({
                             name: sel.name,
-                            value: sel.ext ? sel.value : '*',
+                            value: sel.ext ? sel.value : null,
                             mod: sel.mod
                         });
                         break;
