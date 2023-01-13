@@ -70,9 +70,12 @@ const fromJSON = (json) => {
 const parse = (html) => {
     var tags = [];
     var inTag = false;
+    var escape = false;
     var buffer = '';
     label1: for (const char of html) {
-        if (char == '>') {
+        if (char === escape)
+            escape = 0
+        if (char == '>' && !escape) {
             inTag = false;
             if (buffer[0] == '!') {
                 if (/!\[CDATA\[.*\]\]/s.test(buffer)) {
@@ -116,7 +119,7 @@ const parse = (html) => {
                 if (sIndx != -1) {
                     name = buffer.substring(0, sIndx);
                     const atr = buffer.substring(sIndx);
-                    atrArr = atr.match(/[a-z-]+(=(".+?"|'.+?'|\S+))?/g).map(v => {
+                    atrArr = atr.match(/[a-z-]+(=('.+?'|".+?"|\S+))?/g).map(v => {
                         const [, atrName, atrValue] = /([a-z-]+)(?:=(.+))?/.exec(v);
                         if (typeof atrValue == 'undefined')
                             return new Simple.Attribute(atrName, '');
@@ -130,11 +133,13 @@ const parse = (html) => {
             buffer = '';
         }
         if (inTag) {
+            if (escape === 0) escape = false
+            else if ((char === '"' || char === "'") && !escape) escape = char
             buffer += char;
         }
-        if (char == '<') {
+        if (char == '<' && !escape) {
             inTag = true;
-            buffer = buffer.replace('>', '');
+            buffer = buffer.substring(1);
             if (buffer.length) {
                 tags.push(new Simple.Text(buffer));
             }
