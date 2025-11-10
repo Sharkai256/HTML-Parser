@@ -14,10 +14,10 @@ npm i html-ps
 
 ```JS
 const fs = require('fs')
-const parser = require('html-parser')
+const parse = require('html-ps')
 
 const html = fs.readFileSync('index.html').toString()
-const dom = parser(html)
+const dom = parse(html)
 
 dom.title = 'New Title'
 
