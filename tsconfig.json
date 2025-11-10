@@ -1,7 +1,8 @@
 {
-  "files": ["./src/index.ts", "./src/classes.ts", "./src/query.ts", "./src/ser.ts"],
+  "include": ["./src/*.ts"],
+  "exclude": [""],
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "es2024",
     "module": "CommonJS",
     "outDir": "./",
     "moduleResolution": "node",

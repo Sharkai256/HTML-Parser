@@ -1,11 +1,11 @@
 {
   "name": "html-ps",
-  "version": "1.0.1",
+  "version": "1.0.7",
   "description": "Parses and serializes (HTML ⇄ DOM)",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "ts-node test.ts"
+    "test": "ts-node tests/test"
   },
   "repository": "git://github.com/Sharkai256/HTML-Parser.git",
   "author": "sharkai",

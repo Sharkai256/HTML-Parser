@@ -1,5 +1,5 @@
 import fs from 'fs'
-import parser from './src/index'
+import parser from '../src/index'
 
 /**
  * Type for any iterable object
@@ -66,7 +66,7 @@ const test = (name: number | string) => {
     }
     if (fs.existsSync(`tests/${name}.js`) && (state == '\x1b[31mErr: Test not found' || state == '\x1b[32mPassed')) {
         try {
-            const tester = require('./tests/2')
+            const tester = require(`./${name}`)
             state = tester(parsed)
         } catch (err) {
             state = '\x1b[31mErr: Test execution failed\n' + err
@@ -79,6 +79,6 @@ const test = (name: number | string) => {
           \rParse elapsed time - \x1b[1m${parseTime <= 5 ? '\x1b[32m' : '\x1b[31m'}${parseTime}\x1b[0m`
 }
 
-const testArr = new Array(2).fill(null).map((v, i) => test(i + 1))
+const testArr = new Array(3).fill(null).map((_, i) => test(i + 1))
 
 console.log(testArr.join('\n\n'))

@@ -18,7 +18,7 @@ const fromJSON = (json: string | Simple.JSONode): Simple.Node => {
                     attr.push(<Simple.Attribute>parseNode(attribute))
                 }
                 return new Simple.Element(json.name, children, ...attr)
-                
+
             case 'singletag':
                 for (const attribute of json.attributes) {
                     attr.push(<Simple.Attribute>parseNode(attribute))
@@ -50,16 +50,24 @@ const fromJSON = (json: string | Simple.JSONode): Simple.Node => {
                 return new Simple.DocumentType(json.name)
         }
     }
-    
+
     return parseNode(obj)
 }
 
 const parse = (html: string): Simple.DOM => {
-    var tags: Simple.Node[] = [];
-    var inTag = false;
-    var escape = false;
-    var buffer = '';
+    let tags: Simple.Node[] = [];
+    let inTag = false;
+    let closed = false;
+    let escape: boolean | number | string = false;
+    let buffer = '';
+    let line = 1, col = 0;
     label1: for (const char of html) {
+        if (char === '\n') {
+            line++
+            col = 0
+        }
+        col++
+        closed = false
         if (char === escape)
             escape = 0;
         if (char == '>' && !escape) {
@@ -93,9 +101,9 @@ const parse = (html: string): Simple.DOM => {
                             array.push(tags.pop());
                         }
                     }
-                    throw new Error(`Invalid HTML input (No opening tag) [${buffer}]`);
+                    throw new Error(`Invalid HTML input (No opening tag) [${buffer}] at [Ln ${line}, Col ${col}]`);
                 }
-                const sIndx = buffer.indexOf(' ');
+                const sIndx = buffer.search(/\s/);
                 let name = buffer;
                 let atrArr = [];
                 if (sIndx != -1) {
@@ -110,22 +118,22 @@ const parse = (html: string): Simple.DOM => {
                 }
                 tags.push(new Simple.SingleTag(name, buffer[buffer.length - 1] == '/', ...atrArr));
             }
+            closed = true;
             buffer = '';
         }
         if (inTag) {
             if (escape === 0) escape = false;
             else if ((char === '"' || char === "'") && !escape) escape = char;
-            buffer += char;
+            if (char !== '\n') buffer += char;
         }
         if (char == '<' && !escape) {
             inTag = true;
-            buffer = buffer.substring(1);
             if (buffer.length) {
                 tags.push(new Simple.Text(buffer));
             }
             buffer = '';
         }
-        if (!inTag) {
+        if (!inTag && !closed) {
             buffer += char;
         }
     }
